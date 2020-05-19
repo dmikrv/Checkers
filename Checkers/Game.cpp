@@ -152,7 +152,7 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
                 // проверка на наличие шашек
                 if ((sideNow == SIDE_WHITE && countBlack == 0)
                     || (sideNow == SIDE_BLACK && countWhite == 0)) {
-                    endGame(hOut, hIn, getInversionSide(sideNow), result);
+                    endGame(hOut, hIn, sideNow, result);
                     return;
                 }
 

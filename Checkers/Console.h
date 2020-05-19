@@ -6,7 +6,7 @@
 void cursorVisible(HANDLE hOut, bool isVisible = false);
 void dragWindow(int X, int Y);
 void resizeWindow(int cols, int lines);
-void drawPosition(HANDLE hout, int X, int Y, COORD c);
+void drawPosition(HANDLE hout, COORD where, COORD what);
 void changeFont(HANDLE hOut, COORD dwFontSize);
 
 namespace Colors {
@@ -29,6 +29,13 @@ namespace Colors {
         COLOR_WHITE = FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE,
     };
 }
+
+namespace Keyboard {
+    enum Keys {
+        KEY_ESC = 27,
+    };
+}
+
 
 
 // Атрибуты color: Ib Rb Gb Bb If Rf Gf Bf

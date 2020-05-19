@@ -22,20 +22,17 @@ void resizeWindow(int cols, int lines)
     system(str);
 }
 
-void drawPosition(HANDLE hout, int X, int Y, COORD c)
+void drawPosition(HANDLE hout, COORD where, COORD what)
 {
-    COORD menu;
-    menu.X = X;
-    menu.Y = Y;
-    SetConsoleCursorPosition(hout, menu);
+    SetConsoleCursorPosition(hout, where);
     SetConsoleTextAttribute(hout, Colors::COLOR_RED);
     std::cout << "Position: ";
-    menu.Y++;
-    SetConsoleCursorPosition(hout, menu);
-    std::cout << "  X: " << c.X << "   ";
-    menu.Y++;
-    SetConsoleCursorPosition(hout, menu);
-    std::cout << "  Y: " << c.Y << "   ";
+    where.Y++;
+    SetConsoleCursorPosition(hout, where);
+    std::cout << "  X: " << what.X << "   ";
+    where.Y++;
+    SetConsoleCursorPosition(hout, where);
+    std::cout << "  Y: " << what.Y << "   ";
 }
 
 void changeFont(HANDLE hOut, COORD dwFontSize)

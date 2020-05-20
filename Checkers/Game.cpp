@@ -4,21 +4,22 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
 {
     unsigned char field[FIELD_HEIGHT][FIELD_WIDTH];
     register int sideNow = (gameMode == GM_BLACK ? SIDE_BLACK : SIDE_WHITE);
-    int sideNowCol = (sideNow == SIDE_WHITE ? SIDE_WHITE_COLOR : SIDE_BLACK_COLOR);
+    int sideNowColor = (sideNow == SIDE_WHITE ? SIDE_WHITE_COLOR : SIDE_BLACK_COLOR);
     initField(field, gameMode);
 
-    INPUT_RECORD all_events;
+    INPUT_RECORD allEvents;
     DWORD cWrittenChars;
     DWORD count;
-    COORD point;
+    COORD mousePoint;
 
     unsigned countBlack = 12;
     unsigned countWhite = 12;
 
     bool doneFlag = false; // флаг сделанного хода
 
+    // УБЕРИ ФЛАГИ ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
     bool selectedFlag = false;
-    COORD selectedCoord{ 0, 0 };
+    COORD selectedObject{ 0, 0 };
 
     bool beatFlag = false;
     COORD beatCoord{ 0, 0 };
@@ -26,7 +27,6 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
     system("cls");
     SetConsoleMode(hIn, ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
 
-    //changeFont(hOut, { WINDOW_FONT_SIZE_WIDTH , WINDOW_FONT_SIZE_HEIGHT });
     if (gameMode == GM_TWOPLAYER)
         drawSideshow(hOut, sideNow, SIDESHOW_POS_X, SIDESHOW_POS_Y);
     drawNumbering(hOut, NUMBERING_POS_X, NUMBERING_POS_Y);
@@ -36,19 +36,19 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
     drawButtons(hOut, BUTTONS_POS_X, BUTTONS_POS_Y);
 
     while (true) {
-        ReadConsoleInput(hIn, &all_events, 1, &count);
-        point.X = all_events.Event.MouseEvent.dwMousePosition.X;
-        point.Y = all_events.Event.MouseEvent.dwMousePosition.Y;
+        ReadConsoleInput(hIn, &allEvents, 1, &count);
+        mousePoint.X = allEvents.Event.MouseEvent.dwMousePosition.X;
+        mousePoint.Y = allEvents.Event.MouseEvent.dwMousePosition.Y;
 
         // получение координат в рамках игрового поля
-        COORD pointC = { point.X - FIELD_POS_X, point.Y - FIELD_POS_Y }; // point cut
-        COORD selectedCoordC = { selectedCoord.X - FIELD_POS_X, selectedCoord.Y - FIELD_POS_Y }; // selected cut
+        COORD mousePointRelative = { mousePoint.X - FIELD_POS_X, mousePoint.Y - FIELD_POS_Y }; // mousePoint cut
+        COORD selectedObjectRelative = { selectedObject.X - FIELD_POS_X, selectedObject.Y - FIELD_POS_Y }; // selected cut
 
         // new game
-        if (point.X >= BUTTONS_POS_X && point.X < BUTTONS_POS_X + 8 && point.Y == BUTTONS_POS_Y) {
+        if (mousePoint.X >= BUTTONS_POS_X && mousePoint.X < BUTTONS_POS_X + 8 && mousePoint.Y == BUTTONS_POS_Y) {
             FillConsoleOutputAttribute(hOut, (Colors::COLOR_BLUE << 4), 8, 
                 { BUTTONS_POS_X, BUTTONS_POS_Y }, &cWrittenChars);
-            if (all_events.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
+            if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
                 *result = 0;
                 return;
             }
@@ -57,12 +57,11 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
             FillConsoleOutputAttribute(hOut, Colors::COLOR_GRAY, 8,
                 { BUTTONS_POS_X, BUTTONS_POS_Y }, &cWrittenChars);
         }
-
         // menu
-        if (point.X >= BUTTONS_POS_X + 2 && point.X < BUTTONS_POS_X + 6 && point.Y == BUTTONS_POS_Y + 1) {
+        if (mousePoint.X >= BUTTONS_POS_X + 2 && mousePoint.X < BUTTONS_POS_X + 6 && mousePoint.Y == BUTTONS_POS_Y + 1) {
             FillConsoleOutputAttribute(hOut, (Colors::COLOR_BLUE << 4), 4,
                 { BUTTONS_POS_X + 2, BUTTONS_POS_Y + 1 }, &cWrittenChars);
-            if (all_events.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
+            if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
                 *result = 1;
                 return;
             }
@@ -72,46 +71,49 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
                 { BUTTONS_POS_X + 2, BUTTONS_POS_Y + 1 }, &cWrittenChars);
         }
 
-        if (all_events.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
+
+        if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
             // проверка на отсутствие ходов
             if (isHaveAct(field, sideNow) == false) {
                 endGame(hOut, hIn, getInversionSide(sideNow), result);
                 return;
             }
             // выбор шашки для управления ею
-            if (whoseObject(field, pointC) == sideNow
-                && point.X >= FIELD_POS_X && point.X < FIELD_POS_X + FIELD_WIDTH
-                && point.Y >= FIELD_POS_Y && point.Y < FIELD_POS_Y + FIELD_HEIGHT
-                && (point.X != selectedCoord.X || point.Y != selectedCoord.Y)
-                && (!beatFlag || pointC.X == beatCoord.X && pointC.Y == beatCoord.Y)) {
+            if (whoseObject(field, mousePointRelative) == sideNow
+                && mousePoint.X >= FIELD_POS_X && mousePoint.X < FIELD_POS_X + FIELD_WIDTH
+                && mousePoint.Y >= FIELD_POS_Y && mousePoint.Y < FIELD_POS_Y + FIELD_HEIGHT
+                && (mousePoint.X != selectedObject.X || mousePoint.Y != selectedObject.Y)
+                && (!beatFlag || mousePointRelative.X == beatCoord.X && mousePointRelative.Y == beatCoord.Y)) {
                 if (selectedFlag == true) {
-                    FillConsoleOutputAttribute(hOut, sideNowCol, 1, selectedCoord, &cWrittenChars);
+                    FillConsoleOutputAttribute(hOut, sideNowColor, 1, selectedObject, &cWrittenChars);
                 }
-                FillConsoleOutputAttribute(hOut, SELECTED_COLOR, 1, point, &cWrittenChars);
-                selectedCoord.X = point.X;
-                selectedCoord.Y = point.Y;
+                FillConsoleOutputAttribute(hOut, SELECTED_COLOR, 1, mousePoint, &cWrittenChars);
+                selectedObject.X = mousePoint.X;
+                selectedObject.Y = mousePoint.Y;
                 selectedFlag = true;
             }
             // бить шашкой
             if (isObligatoryMove(field, sideNow) == true) {
-                if (isAllowedBeat(field, selectedCoordC, pointC, sideNow) == true && selectedFlag == true
-                    && pointC.X >= 0 && pointC.X < FIELD_WIDTH && pointC.Y >= 0 && pointC.Y < FIELD_HEIGHT) {
+                if (isAllowedBeat(field, selectedObjectRelative, mousePointRelative, sideNow) == true 
+                    && selectedFlag == true && mousePointRelative.X >= 0 && mousePointRelative.X < FIELD_WIDTH 
+                    && mousePointRelative.Y >= 0 && mousePointRelative.Y < FIELD_HEIGHT) {
                     selectedFlag = false;
-                    selectedCoord = { 0, 0 };
+                    selectedObject = { 0, 0 };
 
-                    takingChecker(field, selectedCoordC, pointC);
+                    takingChecker(field, selectedObjectRelative, mousePointRelative);
 
                     if (sideNow == SIDE_WHITE)
                         countBlack--;
                     else
                         countWhite--;
 
-                    if (pointC.Y == 0)
-                        field[pointC.Y][pointC.X] = (sideNow == SIDE_WHITE ? OBJ_WHITE_KING : OBJ_BLACK_KING);
+                    if (mousePointRelative.Y == 0)
+                        field[mousePointRelative.Y][mousePointRelative.X] = sideNow == SIDE_WHITE ? 
+                            OBJ_WHITE_KING : OBJ_BLACK_KING;
 
-                    if (isAllowedBeat(field, pointC, sideNow)) {
+                    if (isAllowedBeat(field, mousePointRelative, sideNow)) {
                         beatFlag = true;
-                        beatCoord = { pointC.X, pointC.Y };
+                        beatCoord = { mousePointRelative.X, mousePointRelative.Y };
                         drawField(hOut, field, FIELD_POS_X, FIELD_POS_Y);
                         drawCount(hOut, countBlack, countWhite);
                     }
@@ -123,25 +125,25 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
                 }
             }
             // перемещение шашки или дамки
-            else if (isAllowedMove(field, selectedCoordC, pointC) && selectedFlag == true) {
+            else if (isAllowedMove(field, selectedObjectRelative, mousePointRelative) && selectedFlag == true) {
                 selectedFlag = false;
-                selectedCoord = { 0, 0 };
-                field[pointC.Y][pointC.X] = field[selectedCoordC.Y][selectedCoordC.X];
-                field[selectedCoordC.Y][selectedCoordC.X] = OBJ_EMPTY;
-                if (pointC.Y == 0)
-                    field[pointC.Y][pointC.X] = (sideNow == SIDE_WHITE ? OBJ_WHITE_KING : OBJ_BLACK_KING);
+                selectedObject = { 0, 0 };
+                field[mousePointRelative.Y][mousePointRelative.X] = 
+                    field[selectedObjectRelative.Y][selectedObjectRelative.X];
+
+                field[selectedObjectRelative.Y][selectedObjectRelative.X] = OBJ_EMPTY;
+                if (mousePointRelative.Y == 0)
+                    field[mousePointRelative.Y][mousePointRelative.X] = (sideNow == SIDE_WHITE ? 
+                        OBJ_WHITE_KING : OBJ_BLACK_KING);
 
                 doneFlag = true;
             }
 
             // отмена действия
-            if ((point.X != selectedCoord.X || point.Y != selectedCoord.Y) && selectedFlag == true) {
-                FillConsoleOutputAttribute(hOut, sideNowCol, 1, selectedCoord, &cWrittenChars);
+            if ((mousePoint.X != selectedObject.X || mousePoint.Y != selectedObject.Y) && selectedFlag == true) {
+                FillConsoleOutputAttribute(hOut, sideNowColor, 1, selectedObject, &cWrittenChars);
                 selectedFlag = false;
-                selectedCoord = { 0, 0 };
-            }
-            else if (all_events.Event.MouseEvent.dwButtonState == RIGHTMOST_BUTTON_PRESSED && selectedFlag == true) {
-
+                selectedObject = { 0, 0 };
             }
             // проверка на сделанный ход
             if (doneFlag && !beatFlag) {
@@ -157,7 +159,7 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
                 }
 
                 if (gameMode == GM_TWOPLAYER) {
-                    rotatePlayer(sideNow, sideNowCol);
+                    rotatePlayer(sideNow, sideNowColor);
                     rotateField(field);
                     Sleep(450);
                     drawField(hOut, field, FIELD_POS_X, FIELD_POS_Y);
@@ -167,28 +169,28 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
         }
 
         // отмена действия
-        if (all_events.Event.MouseEvent.dwButtonState == RIGHTMOST_BUTTON_PRESSED && selectedFlag == true) {
-            FillConsoleOutputAttribute(hOut, sideNowCol, 1, selectedCoord, &cWrittenChars);
+        if (allEvents.Event.MouseEvent.dwButtonState == RIGHTMOST_BUTTON_PRESSED && selectedFlag == true) {
+            FillConsoleOutputAttribute(hOut, sideNowColor, 1, selectedObject, &cWrittenChars);
             selectedFlag = false;
-            selectedCoord = { 0, 0 };
+            selectedObject = { 0, 0 };
         }
 
-        //if (all_events.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
-        //    SetConsoleCursorPosition(h, point);
+        //if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
+        //    SetConsoleCursorPosition(h, mousePoint);
         //    cout << (char)219; 
         //}
-        //else if (all_events.Event.MouseEvent.dwButtonState == RIGHTMOST_BUTTON_PRESSED) {
-        //    SetConsoleCursorPosition(h, point);
+        //else if (allEvents.Event.MouseEvent.dwButtonState == RIGHTMOST_BUTTON_PRESSED) {
+        //    SetConsoleCursorPosition(h, mousePoint);
         //    cout << " ";
         //}
 
-        //if (all_events.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED 
-        //    && point.X >= 20 && point.X < 40 && point.Y >= 10 && point.Y < 13) {     
+        //if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED 
+        //    && mousePoint.X >= 20 && mousePoint.X < 40 && mousePoint.Y >= 10 && mousePoint.Y < 13) {     
         //    b(h, ++color);
         //}
 
-        //else if (all_events.Event.MouseEvent.dwButtonState == RIGHTMOST_BUTTON_PRESSED
-        //    && point.X >= 20 && point.X < 40 && point.Y >= 20 && point.Y < 23) {
+        //else if (allEvents.Event.MouseEvent.dwButtonState == RIGHTMOST_BUTTON_PRESSED
+        //    && mousePoint.X >= 20 && mousePoint.X < 40 && mousePoint.Y >= 20 && mousePoint.Y < 23) {
         //    c(h, ++color2);
         //}
     }
@@ -201,14 +203,12 @@ template <typename T> void mySwap(T& a, T& b)
     a = temp;
 }
 
-int module(int a)
+template <typename T> T myAbs(T a)
 {
-    if (a > 0)
+    if (a >= 0)
         return a;
-    else if (a < 0)
-        return -a;
     else
-        return 0;
+        return -a;
 }
 
 void initField(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], int gameMode)
@@ -333,14 +333,14 @@ void drawButtons(HANDLE& hOut, short X, short Y)
 bool isAllowedBeat(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj, COORD target, int sideNow)
 {
     if ((field[obj.Y][obj.X] == OBJ_WHITE || field[obj.Y][obj.X] == OBJ_BLACK) && field[target.Y][target.X] == OBJ_EMPTY
-        && module(target.Y - obj.Y) == 2 && module(target.X - obj.X) == 2
+        && myAbs(target.Y - obj.Y) == 2 && myAbs(target.X - obj.X) == 2
         && whoseObject(field, { obj.X + (target.X - obj.X) / 2 , obj.Y + (target.Y - obj.Y) / 2 })
         == getInversionSide(sideNow)) {
         return true;
     }
     else if ((field[obj.Y][obj.X] == OBJ_WHITE_KING || field[obj.Y][obj.X] == OBJ_BLACK_KING)
-        && field[target.Y][target.X] == OBJ_EMPTY && module(target.X - obj.X) == module(target.Y - obj.Y)) {
-        short _const = module(target.X - obj.X);
+        && field[target.Y][target.X] == OBJ_EMPTY && myAbs(target.X - obj.X) == myAbs(target.Y - obj.Y)) {
+        short _const = myAbs(target.X - obj.X);
         int countEnemyChecker = 0;
         COORD grad{ (target.X - obj.X) / _const, (target.Y - obj.Y) / _const }; // градиент, напрвление движения
         for (short i = 1; i < _const; i++) {
@@ -435,8 +435,8 @@ bool isAllowedMove(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj, CO
 
         // если это дамка
         if ((field[obj.Y][obj.X] == OBJ_WHITE_KING || field[obj.Y][obj.X] == OBJ_BLACK_KING)
-            && module(target.X - obj.X) == module(target.Y - obj.Y)) {
-            int _const = module(target.X - obj.X);
+            && myAbs(target.X - obj.X) == myAbs(target.Y - obj.Y)) {
+            int _const = myAbs(target.X - obj.X);
             COORD grad = calculateGradient(obj, target); // градиент, напрвление движения
             int sideNow = whoseObject(field, obj);
             for (short i = 1; i < _const; i++) {
@@ -450,10 +450,10 @@ bool isAllowedMove(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj, CO
     return false;
 }
 
-void rotatePlayer(int& sideNow, int& sideNowCol)
+void rotatePlayer(int& sideNow, int& sideNowColor)
 {
     sideNow = getInversionSide(sideNow);
-    sideNowCol = (sideNow == SIDE_WHITE ? SIDE_WHITE_COLOR : SIDE_BLACK_COLOR);
+    sideNowColor = (sideNow == SIDE_WHITE ? SIDE_WHITE_COLOR : SIDE_BLACK_COLOR);
 }
 
 void rotateField(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH])
@@ -495,9 +495,7 @@ inline int getInversionSide(int sideNow)
 
 COORD calculateGradient(COORD obj, COORD target)
 {
-    if (module(target.X - obj.X) != module(target.Y - obj.Y))
-        Sleep(INFINITE);
-    short _const = module(target.X - obj.X);
+    short _const = myAbs(target.X - obj.X);
     COORD grad{ (target.X - obj.X) / _const, (target.Y - obj.Y) / _const }; // градиент, напрвление движения
     return grad;
 }
@@ -505,7 +503,7 @@ COORD calculateGradient(COORD obj, COORD target)
 void takingChecker(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj, COORD target)
 {
     int sideNow = whoseObject(field, obj);
-    short _const = module(target.X - obj.X);
+    short _const = myAbs(target.X - obj.X);
     COORD grad = calculateGradient(obj, target);
 
     for (short i = 1; i < _const; i++) {
@@ -532,9 +530,9 @@ void endGame(HANDLE &hOut, HANDLE &hIn, int sideWin, int* result)
         std::cout << "BLACK WIN!";
     }
 
-    INPUT_RECORD all_events;
+    INPUT_RECORD allEvents;
     DWORD count;
-    COORD point;
+    COORD mousePoint;
     DWORD cWrittenChars;
 
     COORD buttNewgame{ WINDOW_COLS / 2 - 4, 6 };
@@ -548,17 +546,17 @@ void endGame(HANDLE &hOut, HANDLE &hIn, int sideWin, int* result)
     std::cout << "MENU";
     SetConsoleCursorPosition(hOut, buttExit);
     std::cout << "EXIT";
-
+    
     while (true) {
-        ReadConsoleInput(hIn, &all_events, 1, &count);
-        point.X = all_events.Event.MouseEvent.dwMousePosition.X;
-        point.Y = all_events.Event.MouseEvent.dwMousePosition.Y;
+        ReadConsoleInput(hIn, &allEvents, 1, &count);
+        mousePoint.X = allEvents.Event.MouseEvent.dwMousePosition.X;
+        mousePoint.Y = allEvents.Event.MouseEvent.dwMousePosition.Y;
 
-        if (all_events.EventType == MOUSE_EVENT) {
+        if (allEvents.EventType == MOUSE_EVENT) {
             // new game
-            if (point.Y == buttNewgame.Y && point.X >= buttNewgame.X && point.X < buttNewgame.X + 8) {
+            if (mousePoint.Y == buttNewgame.Y && mousePoint.X >= buttNewgame.X && mousePoint.X < buttNewgame.X + 8) {
                 FillConsoleOutputAttribute(hOut, (Colors::COLOR_BLUE << 4), 8, buttNewgame, &cWrittenChars);
-                if (all_events.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
+                if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
                     *result = 0;
                     return;
                 }
@@ -568,9 +566,9 @@ void endGame(HANDLE &hOut, HANDLE &hIn, int sideWin, int* result)
             }
                 
             // menu
-            if (point.Y == buttMenu.Y && point.X >= buttMenu.X && point.X < buttMenu.X + 4) {
+            if (mousePoint.Y == buttMenu.Y && mousePoint.X >= buttMenu.X && mousePoint.X < buttMenu.X + 4) {
                 FillConsoleOutputAttribute(hOut, (Colors::COLOR_BLUE << 4), 4, buttMenu, &cWrittenChars);
-                if (all_events.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
+                if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
                     *result = 1;
                     return;
                 }
@@ -580,9 +578,9 @@ void endGame(HANDLE &hOut, HANDLE &hIn, int sideWin, int* result)
             }
                 
             // exit
-            if (point.Y == buttExit.Y && point.X >= buttExit.X && point.X < buttExit.X + 4) {
+            if (mousePoint.Y == buttExit.Y && mousePoint.X >= buttExit.X && mousePoint.X < buttExit.X + 4) {
                 FillConsoleOutputAttribute(hOut, (Colors::COLOR_BLUE << 4), 4, buttExit, &cWrittenChars);
-                if (all_events.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
+                if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
                     exit(0);
                 }
             } 

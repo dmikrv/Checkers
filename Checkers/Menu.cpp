@@ -1,14 +1,19 @@
 ﻿#include "Menu.h"
 
-void drawLogo(HANDLE& hOut)
+enum MenuMode {
+    MENU_MAIN,
+    MENU_GM_SELECTION,
+    MENU_SIDE_SELECTION,
+};
+
+void drawLogo(HANDLE& hOut, COORD logo)
 {
-    COORD logo{ WINDOW_COLS / 2 - 8, 2 };
     SetConsoleCursorPosition(hOut, logo);
     SetConsoleTextAttribute(hOut, Colors::COLOR_CYAN);
     std::cout << "RUSSIAN CHECKERS";
 }
 
-void drawMenu(HANDLE& hOut, HANDLE& hIn, COORD *button, int mode)
+void drawMenu(HANDLE& hOut, HANDLE& hIn, COORD* button, int mode)
 {
     if (mode == MENU_MAIN) {
         SetConsoleCursorPosition(hOut, { button->X - 3,button->Y });
@@ -42,31 +47,33 @@ void menu(HANDLE& hOut, HANDLE& hIn, int* gameMode)
     COORD buttSinglePlay { WINDOW_COLS / 2 - 7, 6 };
     COORD buttTwoPlay{ WINDOW_COLS / 2 - 6, 7 };
     COORD buttBack{ WINDOW_COLS / 2 - 2, 8 };
+    COORD logo{ WINDOW_COLS / 2 - 8, 2 };
 
     COORD buttons[]{ buttNewgame, buttHomepage, buttExit, buttSinglePlay, buttTwoPlay, buttBack };
 
     int mode = MENU_MAIN;
     system("cls");
     SetConsoleMode(hIn, ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
-    drawLogo(hOut);
+    drawLogo(hOut, logo);
     drawMenu(hOut, hIn, buttons, mode);
     
-    INPUT_RECORD all_events;
+    INPUT_RECORD allEvents;
     DWORD count;
-    COORD point;
+    COORD mousePoint;
     DWORD cWrittenChars;
 
     while (true) {
-        ReadConsoleInput(hIn, &all_events, 1, &count);
-        point.X = all_events.Event.MouseEvent.dwMousePosition.X;
-        point.Y = all_events.Event.MouseEvent.dwMousePosition.Y;
+        ReadConsoleInput(hIn, &allEvents, 1, &count);
+        mousePoint.X = allEvents.Event.MouseEvent.dwMousePosition.X;
+        mousePoint.Y = allEvents.Event.MouseEvent.dwMousePosition.Y;
 
-        if (all_events.EventType == MOUSE_EVENT) {
+        if (allEvents.EventType == MOUSE_EVENT) {
             if (mode == MENU_MAIN) {
                 // new game
-                if (point.Y == buttNewgame.Y && point.X >= buttNewgame.X && point.X < buttNewgame.X + 8) {
+                if (mousePoint.Y == buttNewgame.Y && mousePoint.X >= buttNewgame.X 
+                    && mousePoint.X < buttNewgame.X + 8) {
                     FillConsoleOutputAttribute(hOut, (Colors::COLOR_BLUE << 4), 8, buttNewgame, &cWrittenChars);
-                    if (all_events.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
+                    if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
                         mode = MENU_GM_SELECTION;
                         drawMenu(hOut, hIn, buttons, mode);
                     }
@@ -76,9 +83,10 @@ void menu(HANDLE& hOut, HANDLE& hIn, int* gameMode)
                 }
 
                 // homepage
-                if (point.Y == buttHomepage.Y && point.X >= buttHomepage.X && point.X < buttHomepage.X + 8) {
+                if (mousePoint.Y == buttHomepage.Y && mousePoint.X >= buttHomepage.X 
+                    && mousePoint.X < buttHomepage.X + 8) {
                     FillConsoleOutputAttribute(hOut, (Colors::COLOR_BLUE << 4), 8, buttHomepage, &cWrittenChars);
-                    if (all_events.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
+                    if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
                         system("start https://gitlab.com/fan1ech00/checkers");
                     }
                 }
@@ -87,9 +95,9 @@ void menu(HANDLE& hOut, HANDLE& hIn, int* gameMode)
                 }
 
                 // exit
-                if (point.Y == buttExit.Y && point.X >= buttExit.X && point.X < buttExit.X + 4) {
+                if (mousePoint.Y == buttExit.Y && mousePoint.X >= buttExit.X && mousePoint.X < buttExit.X + 4) {
                     FillConsoleOutputAttribute(hOut, (Colors::COLOR_BLUE << 4), 4, buttExit, &cWrittenChars);
-                    if (all_events.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
+                    if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
                         exit(0);
                     }
                 }
@@ -99,9 +107,9 @@ void menu(HANDLE& hOut, HANDLE& hIn, int* gameMode)
             }
             else if (mode == MENU_GM_SELECTION) {
                 // single player
-                //if (point.Y == buttSinglePlay.Y && point.X >= buttSinglePlay.X && point.X < buttSinglePlay.X + 13) {
+                //if (mousePoint.Y == buttSinglePlay.Y && mousePoint.X >= buttSinglePlay.X && mousePoint.X < buttSinglePlay.X + 13) {
                 //    FillConsoleOutputAttribute(hOut, (Colors::COLOR_BLUE << 4), 13, buttSinglePlay, &cWrittenChars);
-                //    if (all_events.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
+                //    if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
                 //        ;
                 //    }
                 //}
@@ -110,9 +118,10 @@ void menu(HANDLE& hOut, HANDLE& hIn, int* gameMode)
                 //}
 
                 // two player
-                if (point.Y == buttTwoPlay.Y && point.X >= buttTwoPlay.X && point.X < buttTwoPlay.X + 11) {
+                if (mousePoint.Y == buttTwoPlay.Y && mousePoint.X >= buttTwoPlay.X 
+                    && mousePoint.X < buttTwoPlay.X + 11) {
                     FillConsoleOutputAttribute(hOut, (Colors::COLOR_BLUE << 4), 11, buttTwoPlay, &cWrittenChars);
-                    if (all_events.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
+                    if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
                         *gameMode = GM_TWOPLAYER;
                         return;
                     }
@@ -122,9 +131,9 @@ void menu(HANDLE& hOut, HANDLE& hIn, int* gameMode)
                 }
 
                 // back
-                if (point.Y == buttBack.Y && point.X >= buttBack.X && point.X < buttBack.X + 4) {
+                if (mousePoint.Y == buttBack.Y && mousePoint.X >= buttBack.X && mousePoint.X < buttBack.X + 4) {
                     FillConsoleOutputAttribute(hOut, (Colors::COLOR_BLUE << 4), 4, buttBack, &cWrittenChars);
-                    if (all_events.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
+                    if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
                         mode = MENU_MAIN;
                         drawMenu(hOut, hIn, buttons, mode);
                     }

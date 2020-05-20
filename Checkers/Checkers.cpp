@@ -1,5 +1,4 @@
-﻿#include <Windows.h>
-#include <iostream>
+﻿#include "Checkers.h"
 #include "Menu.h"
 #include "Game.h"
 
@@ -12,16 +11,9 @@ int main()
     cursorVisible(hOut, false);
     HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE);
     SetConsoleMode(hIn, ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
+    
+    changeFont(hOut, WINDOW_FONT_SIZE, WINDOW_FONT_NAME);
 
-    CONSOLE_FONT_INFOEX cfi;
-    cfi.cbSize = sizeof(cfi);
-    //cfi.nFont = 0;
-    cfi.dwFontSize.Y = WINDOW_FONT_SIZE;    // Height
-    //cfi.FontFamily = FF_DONTCARE;
-    //cfi.FontWeight = FW_NORMAL;
-    wcscpy_s(cfi.FaceName, WINDOW_FONT_NAME); // Choose your font
-    SetCurrentConsoleFontEx(hOut, FALSE, &cfi);
-   
     int gameMode;
     int buff = 1;
     while (true) {

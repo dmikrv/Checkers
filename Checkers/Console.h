@@ -1,13 +1,12 @@
 #pragma once
-
 #include <Windows.h>
 #include <iostream>
 
 void cursorVisible(HANDLE hOut, bool isVisible = false);
 void dragWindow(int X, int Y);
 void resizeWindow(int cols, int lines);
-void drawPosition(HANDLE hout, COORD where, COORD what);
-void changeFont(HANDLE hOut, COORD dwFontSize);
+void drawPosition(HANDLE hout, int color, COORD where, COORD what);
+void changeFont(HANDLE& hOut, int fontSize, const wchar_t* fontName);
 
 namespace Colors {
     enum Colors {
@@ -35,10 +34,3 @@ namespace Keyboard {
         KEY_ESC = 27,
     };
 }
-
-
-
-// Атрибуты color: Ib Rb Gb Bb If Rf Gf Bf
-// создаем рандомный цвет, делаем его дупликат для background
-// поднимаем флаг интенсивности для foreground
-//SetConsoleTextAttribute(h, (COLOR::GRAY << 4));

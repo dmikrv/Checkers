@@ -22,10 +22,10 @@ void resizeWindow(int cols, int lines)
     system(str);
 }
 
-void drawPosition(HANDLE hout, COORD where, COORD what)
+void drawPosition(HANDLE hout, int color, COORD where, COORD what)
 {
     SetConsoleCursorPosition(hout, where);
-    SetConsoleTextAttribute(hout, Colors::COLOR_RED);
+    SetConsoleTextAttribute(hout, color);
     std::cout << "Position: ";
     where.Y++;
     SetConsoleCursorPosition(hout, where);
@@ -35,15 +35,15 @@ void drawPosition(HANDLE hout, COORD where, COORD what)
     std::cout << "  Y: " << what.Y << "   ";
 }
 
-void changeFont(HANDLE hOut, COORD dwFontSize)
+void changeFont(HANDLE& hOut, int fontSize, const wchar_t* fontName)
 {
     CONSOLE_FONT_INFOEX cfi;
     cfi.cbSize = sizeof(cfi);
-    cfi.nFont = 0;
-    cfi.dwFontSize.X = dwFontSize.X;                   // Width of each character in the font
-    cfi.dwFontSize.Y = dwFontSize.Y;                  // Height
-    cfi.FontFamily = FF_DONTCARE;
-    cfi.FontWeight = FW_NORMAL;
-    //wcscpy_s(cfi.FaceName, WINDOW_FONT_NAME); // Choose your font
+    //cfi.nFont = 0;
+    cfi.dwFontSize.Y = fontSize;    // Height
+    //cfi.dwFontSize.Y = dwFontSize.Y;                  // Height
+    //cfi.FontFamily = FF_DONTCARE;
+    //cfi.FontWeight = FW_NORMAL;
+    wcscpy_s(cfi.FaceName, fontName); // Choose your font
     SetCurrentConsoleFontEx(hOut, FALSE, &cfi);
 }

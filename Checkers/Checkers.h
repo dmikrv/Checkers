@@ -22,6 +22,9 @@
 #define LEGENDMAP_POS_X 2
 #define LEGENDMAP_POS_Y 11
 
+#define GAME_WEBSITE "https://gitlab.com/fan1ech00/checkers"
+#define ROTATE_FIELD_SLEEP 400
+
 enum Side {
     SIDE_WHITE,
     SIDE_BLACK,

@@ -30,7 +30,9 @@ COORD calculateGradient(COORD obj, COORD target);
 
 const int SIDE_WHITE_COLOR = Colors::COLOR_WHITE; // цвет белого
 const int SIDE_BLACK_COLOR = Colors::COLOR_GRAY; // цвет черного
-const int SELECTED_COLOR = Colors::COLOR_BLUE;
+const int CELL_COLOR = Colors::COLOR_DARKYELLOW;
+const int SELECTED_CHECKER_COLOR = Colors::COLOR_BLUE;
+const int HIGHLIGHT_CHECKER_COLOR = Colors::COLOR_DARKRED;
 
 enum Obj {
 	OBJ_EMPTY,

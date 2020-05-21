@@ -87,7 +87,7 @@ void menu(HANDLE& hOut, HANDLE& hIn, int* gameMode)
                     && mousePoint.X < buttHomepage.X + 8) {
                     FillConsoleOutputAttribute(hOut, (Colors::COLOR_BLUE << 4), 8, buttHomepage, &cWrittenChars);
                     if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
-                        ShellExecuteA(NULL, "open", GAME_WEBSITE, NULL, NULL, SW_SHOWDEFAULT);
+                        openUrl(GAME_WEBSITE);
                     }
                 }
                 else {

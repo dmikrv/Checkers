@@ -20,13 +20,24 @@ void drawButtons(HANDLE& hOut, short X, short Y);
 bool isObligatoryMove(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], int sideNow);
 bool isAllowedMove(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj, COORD target);
 bool isAllowedMove(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj);
-bool isAllowedBeat(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj, COORD target, int sideNow);
-bool isAllowedBeat(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj, int sideNow);
+bool isAllowedBeat(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj, COORD target);
+bool isAllowedBeat(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj);
 bool isHaveAct(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], int sideNow);
+
+void showObligatoryChecker(HANDLE& hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], int sideNow,
+	bool isInversionAction = false);
+void showAllowedAction(HANDLE& hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj,
+	bool isInversionAction = false);
+void showAllowedMove(HANDLE& hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj,
+	bool isInversionAction = false);
+void showAllowedBeat(HANDLE& hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj,
+	bool isInversionAction = false);
 
 int whoseObject(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj);
 int getInversionSide(int sideNow);
 COORD calculateGradient(COORD obj, COORD target);
+inline COORD getRelativePoint(COORD c);
+inline COORD getAbsolutePoint(COORD c);
 
 const int SIDE_WHITE_COLOR = Colors::COLOR_WHITE; // цвет белого
 const int SIDE_BLACK_COLOR = Colors::COLOR_GRAY; // цвет черного

@@ -47,3 +47,8 @@ void changeFont(HANDLE& hOut, int fontSize, const wchar_t* fontName)
     wcscpy_s(cfi.FaceName, fontName); // Choose your font
     SetCurrentConsoleFontEx(hOut, FALSE, &cfi);
 }
+
+void openUrl(LPCSTR url)
+{
+    ShellExecuteA(NULL, "open", url, NULL, NULL, SW_SHOWDEFAULT);
+}

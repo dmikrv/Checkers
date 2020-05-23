@@ -2,7 +2,6 @@
 #include "Menu.h"
 #include "Game.h"
 
-
 int main()
 {
     SetConsoleTitleA(WINDOW_TITLE);
@@ -14,6 +13,7 @@ int main()
     SetConsoleMode(hIn, ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
     
     changeFont(hOut, WINDOW_FONT_SIZE, WINDOW_FONT_NAME);
+    //sMarioThread();
 
     int gameMode;
     int buff = 1;

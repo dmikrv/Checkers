@@ -150,11 +150,20 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
                     field[mousePointRelative.Y][mousePointRelative.X] = 
                         (sideNow == SIDE_WHITE ? OBJ_WHITE_KING : OBJ_BLACK_KING);
 
+                if (field[mousePointRelative.Y][mousePointRelative.X] == OBJ_WHITE
+                    || field[mousePointRelative.Y][mousePointRelative.X] == OBJ_BLACK) {
+                    sMoveCheckerThread();
+                }
+                else {
+                    sMoveKingThread();
+                }
+
                 doneFlag = true;
             }
 
             // отмена действия
-            if ((mousePoint.X != selectedObject.X || mousePoint.Y != selectedObject.Y) && selectedObject.X != -1) {
+            if ((mousePoint.X != selectedObject.X || mousePoint.Y != selectedObject.Y) && selectedObject.X != -1
+                || doneFlag) {
                 FillConsoleOutputAttribute(hOut, sideNowColor, 1, selectedObject, &cWrittenChars);
                 showAllowedAction(hOut, field, selectedObjectRelative, true);
                 showObligatoryChecker(hOut, field, sideNow, true);

@@ -1,4 +1,7 @@
 .vs/*
 x64/*
 Checkers/x64/*
+Checkers/Debug/*
+Checkers/ReleaseZag/*
 ReleaseZag/*
+Debug/*

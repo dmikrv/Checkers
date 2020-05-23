@@ -228,6 +228,7 @@
     <ClCompile Include="Console.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Menu.cpp" />
+    <ClCompile Include="Sounds.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Console.h" />
@@ -235,6 +236,7 @@
     <ClInclude Include="Menu.h" />
     <ClInclude Include="Checkers.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="Sounds.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resource.rc" />

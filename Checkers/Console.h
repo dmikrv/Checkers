@@ -8,6 +8,7 @@ void resizeWindow(int cols, int lines);
 void drawPosition(HANDLE hout, int color, COORD where, COORD what);
 void changeFont(HANDLE& hOut, int fontSize, const wchar_t* fontName);
 void openUrl(LPCSTR url);
+void cls(HANDLE& hIn);
 
 namespace Colors {
     enum Colors {

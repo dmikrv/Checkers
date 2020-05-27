@@ -1,12 +1,66 @@
 #include "Game.h"
 
+void endGame(HANDLE& hOut, HANDLE& hIn, int sideWin, int* result);
+
+void initField(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], int gameMode);
+void rotateField(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH]);
+void rotatePlayer(int& sideNow, int& sideNowColor);
+void takingChecker(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj, COORD target);
+
+void drawField(HANDLE& hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], short X, short Y);
+void drawCount(HANDLE& hOut, unsigned int countBl, unsigned int countWh);
+void drawSideshow(HANDLE& hOut, int sideNow, short X, short Y);
+void drawNumbering(HANDLE& hOut, short X, short Y);
+void drawLegendMap(HANDLE& hOut, short X, short Y);
+void drawButtons(HANDLE& hOut, short X, short Y);
+
+bool isObligatoryMove(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], int sideNow);
+bool isAllowedMove(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj, COORD target);
+bool isAllowedMove(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj);
+bool isAllowedBeat(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj, COORD target);
+bool isAllowedBeat(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj);
+bool isHaveAct(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], int sideNow);
+
+// show checkers with which you need to take the enemy cheker
+void showObligatoryChecker(HANDLE& hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], int sideNow,
+    bool isInversionAction = false);
+// show possible actions of checkers
+void showAllowedAction(HANDLE& hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj,
+    bool isInversionAction = false);
+// calculation of the gradient, direction of movement
+COORD calculateGradient(COORD obj, COORD target);
+
+int whoseObject(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj);
+int getInversionSide(int sideNow);
+int getTypeObject(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj);
+inline COORD getRelativePoint(COORD c);
+inline COORD getAbsolutePoint(COORD c);
+
+const int SIDE_WHITE_COLOR = Colors::COLOR_WHITE; 
+const int SIDE_BLACK_COLOR = Colors::COLOR_GRAY;
+const int CELL_COLOR = Colors::COLOR_DARKYELLOW;
+const int SELECTED_CHECKER_COLOR = Colors::COLOR_BLUE;
+const int HIGHLIGHT_CHECKER_COLOR = Colors::COLOR_DARKRED;
+
+enum Obj {
+    OBJ_EMPTY,
+    OBJ_WHITE,
+    OBJ_BLACK,
+    OBJ_WHITE_KING,
+    OBJ_BLACK_KING,
+};
+
+enum TypeObj {
+    TYPEOBJ_CHECKER,
+    TYPEOBJ_KING,
+};
+
 void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
 {
-    system("cls");
-    SetConsoleMode(hIn, ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
+    cls(hIn);
 
     unsigned char field[FIELD_HEIGHT][FIELD_WIDTH];
-    register int sideNow = (gameMode == GM_BLACK ? SIDE_BLACK : SIDE_WHITE);
+    int sideNow = (gameMode == GM_BLACK ? SIDE_BLACK : SIDE_WHITE);
     int sideNowColor = (sideNow == SIDE_WHITE ? SIDE_WHITE_COLOR : SIDE_BLACK_COLOR);
     initField(field, gameMode);
 
@@ -18,10 +72,12 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
     unsigned countBlack = 12;
     unsigned countWhite = 12;
 
-    bool doneFlag = false; // флаг сделанного хода
-    bool obligatoryFlag = false; // флаг об€зательного хода
-    COORD selectedObject{ -1, 0 }; // X=-1 -- object is not selected
-    COORD beatCoord{ -1, 0 }; // X=-1 -- beat checker is not active
+    bool doneFlag = false; // is the action done
+    bool obligatoryFlag = false; // flag of obligatory move
+    COORD selectedObject{ -1, 0 }; // coordinates of the selected checker
+                                   // X=-1 -- object is not selected
+    COORD beatCoord{ -1, 0 }; // the coordinates of the checker that began to take the enemy checkers       
+                              // X=-1 -- beat checker is not active
 
     if (gameMode == GM_TWOPLAYER)
         drawSideshow(hOut, sideNow, SIDESHOW_POS_X, SIDESHOW_POS_Y);
@@ -36,16 +92,16 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
         mousePoint.X = allEvents.Event.MouseEvent.dwMousePosition.X;
         mousePoint.Y = allEvents.Event.MouseEvent.dwMousePosition.Y;
 
-        // получение координат в рамках игрового пол€
+        // obtaining coordinates relative to the playing field
         COORD mousePointRelative = getRelativePoint(mousePoint);
         COORD selectedObjectRelative = getRelativePoint(selectedObject);
 
-        // new game
+        // new game button
         if (mousePoint.X >= BUTTONS_POS_X && mousePoint.X < BUTTONS_POS_X + 8 && mousePoint.Y == BUTTONS_POS_Y) {
             FillConsoleOutputAttribute(hOut, (Colors::COLOR_BLUE << 4), 8, 
                 { BUTTONS_POS_X, BUTTONS_POS_Y }, &cWrittenChars);
             if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
-                *result = 0;
+                *result = 0; // result is a formal argument
                 return;
             }
         }
@@ -53,13 +109,13 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
             FillConsoleOutputAttribute(hOut, Colors::COLOR_GRAY, 8,
                 { BUTTONS_POS_X, BUTTONS_POS_Y }, &cWrittenChars);
         }
-        // menu
+        // menu button
         if (mousePoint.X >= BUTTONS_POS_X + 2 && mousePoint.X < BUTTONS_POS_X + 6 
             && mousePoint.Y == BUTTONS_POS_Y + 1) {
             FillConsoleOutputAttribute(hOut, (Colors::COLOR_BLUE << 4), 4,
                 { BUTTONS_POS_X + 2, BUTTONS_POS_Y + 1 }, &cWrittenChars);
             if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
-                *result = 1;
+                *result = 1; // result is a formal argument
                 return;
             }
         }
@@ -68,24 +124,25 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
                 { BUTTONS_POS_X + 2, BUTTONS_POS_Y + 1 }, &cWrittenChars);
         }
 
-        // проверка на отсутствие ходов
+        // check for lack of moves
         if (isHaveAct(field, sideNow) == false) {
             endGame(hOut, hIn, getInversionSide(sideNow), result);
             return;
         }
-        if (isObligatoryMove(field, sideNow) == true && !obligatoryFlag)
+        // check for obligatory moves
+        if (isObligatoryMove(field, sideNow) == true && !obligatoryFlag) {
             obligatoryFlag = true;
-
-
+        }
+            
         if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
-            // выбор шашки дл€ управлени€ ею
+            // choosing checkers to control it
             if (whoseObject(field, mousePointRelative) == sideNow
                 && mousePoint.X >= FIELD_POS_X && mousePoint.X < FIELD_POS_X + FIELD_WIDTH
                 && mousePoint.Y >= FIELD_POS_Y && mousePoint.Y < FIELD_POS_Y + FIELD_HEIGHT
                 && (mousePoint.X != selectedObject.X || mousePoint.Y != selectedObject.Y)) {
                 if ((!obligatoryFlag || isAllowedBeat(field, mousePointRelative))
-                    && (mousePointRelative.X == beatCoord.X && mousePointRelative.Y == beatCoord.Y
-                        || beatCoord.X == -1)) {
+                    && (beatCoord.X == -1 || 
+                        mousePointRelative.X == beatCoord.X && mousePointRelative.Y == beatCoord.Y)) {
                     if (selectedObject.X != -1) {
                         FillConsoleOutputAttribute(hOut, sideNowColor, 1, selectedObject, &cWrittenChars);
                         showAllowedAction(hOut, field, selectedObjectRelative, true);
@@ -96,16 +153,15 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
                     showAllowedAction(hOut, field, mousePointRelative);
                 }
                 else {
-                    if (beatCoord.X == -1)
-                        showObligatoryChecker(hOut, field, sideNow);
-                    else
+                    showObligatoryChecker(hOut, field, sideNow);
+                    if (beatCoord.X != -1)
                         FillConsoleOutputAttribute(hOut, HIGHLIGHT_CHECKER_COLOR,
                             1, getAbsolutePoint(beatCoord), &cWrittenChars);
                 }
             }
                         
-            // вз€тие другой шашки
-            if (obligatoryFlag) {
+            // taking an enemy checker
+            else if (obligatoryFlag) {
                 if (isAllowedBeat(field, selectedObjectRelative, mousePointRelative) == true 
                     && selectedObject.X != -1 && mousePointRelative.X >= 0 && mousePointRelative.X < FIELD_WIDTH 
                     && mousePointRelative.Y >= 0 && mousePointRelative.Y < FIELD_HEIGHT) {
@@ -139,7 +195,8 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
                     }
                 }
             }
-            // перемещение шашки или дамки
+
+            // moving checkers
             else if (isAllowedMove(field, selectedObjectRelative, mousePointRelative) && selectedObject.X != -1) {
                 selectedObject = { -1, 0 };
                 field[mousePointRelative.Y][mousePointRelative.X] = 
@@ -161,21 +218,20 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
                 doneFlag = true;
             }
 
-            // отмена действи€
-            if ((mousePoint.X != selectedObject.X || mousePoint.Y != selectedObject.Y) && selectedObject.X != -1
-                || doneFlag) {
+            // cancel action
+            if ((mousePoint.X != selectedObject.X || mousePoint.Y != selectedObject.Y) && selectedObject.X != -1) {
                 FillConsoleOutputAttribute(hOut, sideNowColor, 1, selectedObject, &cWrittenChars);
-                showAllowedAction(hOut, field, selectedObjectRelative, true);
                 showObligatoryChecker(hOut, field, sideNow, true);
+                showAllowedAction(hOut, field, selectedObjectRelative, true);
                 selectedObject = { -1, 0 };
             }
-            // проверка на сделанный ход
+            // check for the action done
             if (doneFlag) {
                 doneFlag = false;
                 drawField(hOut, field, FIELD_POS_X, FIELD_POS_Y);
                 drawCount(hOut, countBlack, countWhite);
 
-                // проверка на наличие шашек
+                // check for the presence of checkers on the enemy side
                 if ((sideNow == SIDE_WHITE && countBlack == 0) || (sideNow == SIDE_BLACK && countWhite == 0)) {
                     endGame(hOut, hIn, sideNow, result);
                     return;
@@ -191,7 +247,7 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
             }
         }
 
-        // отмена действи€
+        // cancel action
         if (allEvents.Event.MouseEvent.dwButtonState == RIGHTMOST_BUTTON_PRESSED && selectedObject.X != -1) {
             FillConsoleOutputAttribute(hOut, sideNowColor, 1, selectedObject, &cWrittenChars);
             showAllowedAction(hOut, field, selectedObjectRelative, true);
@@ -220,17 +276,12 @@ void initField(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], int gameMode)
 {
     for (int i = 0; i < FIELD_HEIGHT; i++) {
         for (int j = 0; j < FIELD_WIDTH; j++) {
-            if (i >= 0 && i < 3 && (i + j) % 2 == 1) {
+            if (i >= 0 && i < 3 && (i + j) % 2 == 1) 
                 gameMode == GM_BLACK ? field[i][j] = OBJ_WHITE : field[i][j] = OBJ_BLACK;
-                //gameMode == GM_BLACK ? field[i][j] = OBJ_WHITE : field[i][j] = OBJ_BLACK_KING;
-
-            }
-            else if (i >= 5 && i < 8 && (i + j) % 2 == 1) {
+            else if (i >= 5 && i < 8 && (i + j) % 2 == 1) 
                 gameMode == GM_BLACK ? field[i][j] = OBJ_BLACK : field[i][j] = OBJ_WHITE;
-            }
-            else {
+            else
                 field[i][j] = OBJ_EMPTY;
-            }
         }
     }
 }
@@ -335,17 +386,17 @@ void drawButtons(HANDLE& hOut, short X, short Y)
 bool isAllowedBeat(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj, COORD target)
 {
     int sideNow = whoseObject(field, obj);
-    if ((field[obj.Y][obj.X] == OBJ_WHITE || field[obj.Y][obj.X] == OBJ_BLACK) && field[target.Y][target.X] == OBJ_EMPTY
-        && myAbs(target.Y - obj.Y) == 2 && myAbs(target.X - obj.X) == 2
+    if (getTypeObject(field, obj) == TYPEOBJ_CHECKER 
+        && field[target.Y][target.X] == OBJ_EMPTY && myAbs(target.Y - obj.Y) == 2 && myAbs(target.X - obj.X) == 2
         && whoseObject(field, { obj.X + (target.X - obj.X) / 2 , obj.Y + (target.Y - obj.Y) / 2 })
         == getInversionSide(sideNow)) {
         return true;
     }
-    else if ((field[obj.Y][obj.X] == OBJ_WHITE_KING || field[obj.Y][obj.X] == OBJ_BLACK_KING)
+    else if (getTypeObject(field, obj) == TYPEOBJ_KING
         && field[target.Y][target.X] == OBJ_EMPTY && myAbs(target.X - obj.X) == myAbs(target.Y - obj.Y)) {
         short _const = myAbs(target.X - obj.X);
         int countEnemyChecker = 0;
-        COORD grad{ (target.X - obj.X) / _const, (target.Y - obj.Y) / _const }; // градиент, напрвление движени€
+        COORD grad{ (target.X - obj.X) / _const, (target.Y - obj.Y) / _const };
         for (short i = 1; i < _const; i++) {
             int object = whoseObject(field, { i * grad.X + obj.X, i * grad.Y + obj.Y });
             if (object == getInversionSide(sideNow)) {
@@ -364,8 +415,7 @@ bool isAllowedBeat(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj, CO
 bool isAllowedBeat(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj)
 {
     int sideNow = whoseObject(field, obj);
-    // если это шашка
-    if (field[obj.Y][obj.X] == OBJ_WHITE || field[obj.Y][obj.X] == OBJ_BLACK) {
+    if (getTypeObject(field, obj) == TYPEOBJ_CHECKER) {
         if (whoseObject(field, { obj.X - 1, obj.Y - 1 }) == getInversionSide(sideNow)
             && field[obj.Y - 2][obj.X - 2] == OBJ_EMPTY && obj.Y - 2 >= 0 && obj.X - 2 >= 0
             || whoseObject(field, { obj.X + 1, obj.Y - 1 }) == getInversionSide(sideNow)
@@ -377,7 +427,6 @@ bool isAllowedBeat(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj)
             return true;
         }
     }
-    // если дамка
     else {
         COORD grad[4] = { {1, 1}, {1, -1}, {-1, 1}, {-1, -1} };
         for (short i = 0; i < 4; i++) {
@@ -396,7 +445,6 @@ bool isAllowedBeat(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj)
             }
         }
     }
-
     return false;
 }
 
@@ -414,7 +462,7 @@ bool isObligatoryMove(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], int sideNo
 
 bool isAllowedMove(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj)
 {
-    if (field[obj.Y][obj.X] == OBJ_WHITE_KING || field[obj.Y][obj.X] == OBJ_BLACK_KING) {
+    if (getTypeObject(field, obj) == TYPEOBJ_KING) {
         return true;
     }
     else if (field[obj.Y - 1][obj.X - 1] == OBJ_EMPTY || field[obj.Y - 1][obj.X + 1] == OBJ_EMPTY
@@ -426,29 +474,25 @@ bool isAllowedMove(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj)
 
 bool isAllowedMove(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj, COORD target)
 {
-    // если наша цель пуста
     if (field[target.Y][target.X] == OBJ_EMPTY 
         && target.X >= 0 && target.X < FIELD_WIDTH && target.Y >= 0 && target.Y < FIELD_HEIGHT) {
-
-        // если это шашка
-        if (field[obj.Y][obj.X] == OBJ_WHITE || field[obj.Y][obj.X] == OBJ_BLACK) {
+        if (getTypeObject(field, obj) == TYPEOBJ_CHECKER) {
             if (target.Y == obj.Y - 1 && (target.X == obj.X - 1 || target.X == obj.X + 1)) {
                 return true;
             }
         }
-
-        // если это дамка
-        if ((field[obj.Y][obj.X] == OBJ_WHITE_KING || field[obj.Y][obj.X] == OBJ_BLACK_KING)
-            && myAbs(target.X - obj.X) == myAbs(target.Y - obj.Y)) {
-            int _const = myAbs(target.X - obj.X);
-            COORD grad = calculateGradient(obj, target); // градиент, напрвление движени€
-            int sideNow = whoseObject(field, obj);
-            for (short i = 1; i < _const; i++) {
-                if (field[i * grad.Y + obj.Y][i * grad.X + obj.X] != OBJ_EMPTY) {
-                    return false;
+        else {
+            if (myAbs(target.X - obj.X) == myAbs(target.Y - obj.Y)) {
+                int _const = myAbs(target.X - obj.X);
+                COORD grad = calculateGradient(obj, target);
+                int sideNow = whoseObject(field, obj);
+                for (short i = 1; i < _const; i++) {
+                    if (field[i * grad.Y + obj.Y][i * grad.X + obj.X] != OBJ_EMPTY)
+                        return false;
                 }
+                return true;
             }
-            return true;
+
         }
     }
     return false;
@@ -469,15 +513,6 @@ void showObligatoryChecker(HANDLE& hOut, unsigned char field[FIELD_HEIGHT][FIELD
     }
 }
 
-void showAllowedAction(HANDLE& hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj,
-    bool isInversionAction)
-{
-    if (isAllowedBeat(field, obj))
-        showAllowedBeat(hOut, field, obj, isInversionAction);
-    else
-        showAllowedMove(hOut, field, obj, isInversionAction);
-}
-
 void showAllowedBeat(HANDLE& hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj,
     bool isInversionAction)
 {
@@ -487,7 +522,7 @@ void showAllowedBeat(HANDLE& hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH
     COORD enemy;
     COORD emptyCell;
 
-    if (field[obj.Y][obj.X] == OBJ_WHITE || field[obj.Y][obj.X] == OBJ_BLACK) {
+    if (getTypeObject(field, obj) == TYPEOBJ_CHECKER) {
         for (int i = 0; i < 4; i++) {
             enemy = { obj.X + (grad + i)->X, obj.Y + (grad + i)->Y };
             emptyCell = { obj.X + ((grad + i)->X) * 2, obj.Y + ((grad + i)->Y) * 2 };
@@ -529,7 +564,7 @@ void showAllowedMove(HANDLE& hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH
     COORD grad[4] = { {-1, -1} , { 1, -1 }, { -1, 1 }, { 1, 1 } };
     COORD point;
 
-    if (field[obj.Y][obj.X] == OBJ_WHITE || field[obj.Y][obj.X] == OBJ_BLACK) {
+    if (getTypeObject(field, obj) == TYPEOBJ_CHECKER) {
         for (int i = 0; i < 2; i++) {
             point = { obj.X + (grad + i)->X, obj.Y + (grad + i)->Y };
             if (field[point.Y][point.X] == OBJ_EMPTY
@@ -552,6 +587,15 @@ void showAllowedMove(HANDLE& hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH
             }
         }
     }
+}
+
+void showAllowedAction(HANDLE& hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj,
+    bool isInversionAction)
+{
+    if (isAllowedBeat(field, obj))
+        showAllowedBeat(hOut, field, obj, isInversionAction);
+    else
+        showAllowedMove(hOut, field, obj, isInversionAction);
 }
 
 void rotatePlayer(int& sideNow, int& sideNowColor)
@@ -628,6 +672,16 @@ void takingChecker(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj, CO
 
     field[target.Y][target.X] = field[obj.Y][obj.X];
     field[obj.Y][obj.X] = OBJ_EMPTY;
+}
+
+int getTypeObject(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj)
+{
+    if (field[obj.Y][obj.X] == OBJ_BLACK || field[obj.Y][obj.X] == OBJ_WHITE)
+        return TYPEOBJ_CHECKER;
+    else if (field[obj.Y][obj.X] == OBJ_BLACK_KING || field[obj.Y][obj.X] == OBJ_WHITE_KING)
+        return TYPEOBJ_KING;
+    else
+        return -1;
 }
 
 void endGame(HANDLE &hOut, HANDLE &hIn, int sideWin, int* result)

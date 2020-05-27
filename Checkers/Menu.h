@@ -1,5 +1,4 @@
 #pragma once
-
 #include "Checkers.h"
 #include "Console.h"
 

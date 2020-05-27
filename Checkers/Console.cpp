@@ -52,3 +52,9 @@ void openUrl(LPCSTR url)
 {
     ShellExecuteA(NULL, "open", url, NULL, NULL, SW_SHOWDEFAULT);
 }
+
+void cls(HANDLE& hIn)
+{
+    system("CLS");
+    SetConsoleMode(hIn, ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
+}

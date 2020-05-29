@@ -1,6 +1,36 @@
 #include "Game.h"
 
-void endGame(HANDLE& hOut, HANDLE& hIn, int sideWin, int* result);
+#define BUTTONS_POS_X 19
+#define BUTTONS_POS_Y 1
+#define SIDESHOW_POS_X 18
+#define SIDESHOW_POS_Y 5
+#define SHOW_POS_X 18
+#define SHOW_POS_Y 3
+#define NUMBERING_POS_X 5
+#define NUMBERING_POS_Y 0
+#define FIELD_POS_X 6
+#define FIELD_POS_Y 1
+#define LEGENDMAP_POS_X 2
+#define LEGENDMAP_POS_Y 11
+
+const int SIDE_WHITE_COLOR = Colors::COLOR_WHITE;
+const int SIDE_BLACK_COLOR = Colors::COLOR_GRAY;
+const int CELL_COLOR = Colors::COLOR_DARKYELLOW;
+const int SELECTED_CHECKER_COLOR = Colors::COLOR_BLUE;
+const int HIGHLIGHT_CHECKER_COLOR = Colors::COLOR_DARKRED;
+
+enum Obj {
+    OBJ_EMPTY,
+    OBJ_WHITE,
+    OBJ_BLACK,
+    OBJ_WHITE_KING,
+    OBJ_BLACK_KING,
+};
+
+enum TypeObj {
+    TYPEOBJ_CHECKER,
+    TYPEOBJ_KING,
+};
 
 void initField(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], int gameMode);
 void rotateField(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH]);
@@ -22,7 +52,7 @@ bool isAllowedBeat(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj);
 bool isHaveAct(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], int sideNow);
 
 // show checkers with which you need to take the enemy cheker
-void showObligatoryChecker(HANDLE& hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], int sideNow,
+void showObligatoryCheckers(HANDLE& hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], int sideNow,
     bool isInversionAction = false);
 // show possible actions of checkers
 void showAllowedAction(HANDLE& hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj,
@@ -36,28 +66,12 @@ int getTypeObject(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj);
 inline COORD getRelativePoint(COORD c);
 inline COORD getAbsolutePoint(COORD c);
 
-const int SIDE_WHITE_COLOR = Colors::COLOR_WHITE; 
-const int SIDE_BLACK_COLOR = Colors::COLOR_GRAY;
-const int CELL_COLOR = Colors::COLOR_DARKYELLOW;
-const int SELECTED_CHECKER_COLOR = Colors::COLOR_BLUE;
-const int HIGHLIGHT_CHECKER_COLOR = Colors::COLOR_DARKRED;
-
-enum Obj {
-    OBJ_EMPTY,
-    OBJ_WHITE,
-    OBJ_BLACK,
-    OBJ_WHITE_KING,
-    OBJ_BLACK_KING,
-};
-
-enum TypeObj {
-    TYPEOBJ_CHECKER,
-    TYPEOBJ_KING,
-};
+void endGame(HANDLE& hOut, HANDLE& hIn, int sideWin, int* result);
 
 void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
 {
     cls(hIn);
+    sBeginGameThread();
 
     unsigned char field[FIELD_HEIGHT][FIELD_WIDTH];
     int sideNow = (gameMode == GM_BLACK ? SIDE_BLACK : SIDE_WHITE);
@@ -76,7 +90,7 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
     bool obligatoryFlag = false; // flag of obligatory move
     COORD selectedObject{ -1, 0 }; // coordinates of the selected checker
                                    // X=-1 -- object is not selected
-    COORD beatCoord{ -1, 0 }; // the coordinates of the checker that began to take the enemy checkers       
+    COORD beatCoord{ -1, 0 }; // the coordinates of the checker that began to take the enemy checkers
                               // X=-1 -- beat checker is not active
 
     if (gameMode == GM_TWOPLAYER)
@@ -140,7 +154,7 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
                 && mousePoint.X >= FIELD_POS_X && mousePoint.X < FIELD_POS_X + FIELD_WIDTH
                 && mousePoint.Y >= FIELD_POS_Y && mousePoint.Y < FIELD_POS_Y + FIELD_HEIGHT
                 && (mousePoint.X != selectedObject.X || mousePoint.Y != selectedObject.Y)) {
-                if ((!obligatoryFlag || isAllowedBeat(field, mousePointRelative))
+                if ((obligatoryFlag == false || isAllowedBeat(field, mousePointRelative))
                     && (beatCoord.X == -1 || 
                         mousePointRelative.X == beatCoord.X && mousePointRelative.Y == beatCoord.Y)) {
                     if (selectedObject.X != -1) {
@@ -148,15 +162,21 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
                         showAllowedAction(hOut, field, selectedObjectRelative, true);
                     }
                     selectedObject = mousePoint;
-                    showObligatoryChecker(hOut, field, sideNow, true);
+                    showObligatoryCheckers(hOut, field, sideNow, true);
                     FillConsoleOutputAttribute(hOut, SELECTED_CHECKER_COLOR, 1, mousePoint, &cWrittenChars);
                     showAllowedAction(hOut, field, mousePointRelative);
                 }
                 else {
-                    showObligatoryChecker(hOut, field, sideNow);
+                    sInaccessibleChThread();
+                    if (selectedObject.X != -1) {
+                        showAllowedAction(hOut, field, selectedObjectRelative, true);
+                        selectedObject = { -1 , 0 };
+                    }
                     if (beatCoord.X != -1)
                         FillConsoleOutputAttribute(hOut, HIGHLIGHT_CHECKER_COLOR,
                             1, getAbsolutePoint(beatCoord), &cWrittenChars);
+                    else
+                        showObligatoryCheckers(hOut, field, sideNow);
                 }
             }
                         
@@ -168,6 +188,10 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
                     selectedObject = { -1, 0 };
 
                     takingChecker(field, selectedObjectRelative, mousePointRelative);
+                    if (getTypeObject(field, mousePointRelative) == TYPEOBJ_CHECKER)
+                        sTakingThread();
+                    else
+                        sTakingKingThread();
 
                     if (sideNow == SIDE_WHITE)
                         countBlack--;
@@ -207,27 +231,22 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
                     field[mousePointRelative.Y][mousePointRelative.X] = 
                         (sideNow == SIDE_WHITE ? OBJ_WHITE_KING : OBJ_BLACK_KING);
 
-                if (field[mousePointRelative.Y][mousePointRelative.X] == OBJ_WHITE
-                    || field[mousePointRelative.Y][mousePointRelative.X] == OBJ_BLACK) {
-                    sMoveCheckerThread();
-                }
-                else {
-                    sMoveKingThread();
-                }
-
+                sMoveThread();
                 doneFlag = true;
             }
 
             // cancel action
             if ((mousePoint.X != selectedObject.X || mousePoint.Y != selectedObject.Y) && selectedObject.X != -1) {
+                sPressMouseThread();
                 FillConsoleOutputAttribute(hOut, sideNowColor, 1, selectedObject, &cWrittenChars);
-                showObligatoryChecker(hOut, field, sideNow, true);
+                showObligatoryCheckers(hOut, field, sideNow, true);
                 showAllowedAction(hOut, field, selectedObjectRelative, true);
                 selectedObject = { -1, 0 };
             }
             // check for the action done
             if (doneFlag) {
                 doneFlag = false;
+                selectedObject = { -1, 0 };
                 drawField(hOut, field, FIELD_POS_X, FIELD_POS_Y);
                 drawCount(hOut, countBlack, countWhite);
 
@@ -238,6 +257,7 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
                 }
 
                 if (gameMode == GM_TWOPLAYER) {
+                    sRotatePlayerThread();
                     rotatePlayer(sideNow, sideNowColor);
                     rotateField(field);
                     Sleep(ROTATE_FIELD_SLEEP);
@@ -249,9 +269,10 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
 
         // cancel action
         if (allEvents.Event.MouseEvent.dwButtonState == RIGHTMOST_BUTTON_PRESSED && selectedObject.X != -1) {
+            sPressMouseThread();
             FillConsoleOutputAttribute(hOut, sideNowColor, 1, selectedObject, &cWrittenChars);
             showAllowedAction(hOut, field, selectedObjectRelative, true);
-            showObligatoryChecker(hOut, field, sideNow, true);
+            showObligatoryCheckers(hOut, field, sideNow, true);
             selectedObject = { -1, 0 };
         }
     }
@@ -498,7 +519,7 @@ bool isAllowedMove(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj, CO
     return false;
 }
 
-void showObligatoryChecker(HANDLE& hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], int sideNow,
+void showObligatoryCheckers(HANDLE& hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], int sideNow,
     bool isInversionAction)
 {
     DWORD cWrittenChars;
@@ -688,6 +709,7 @@ void endGame(HANDLE &hOut, HANDLE &hIn, int sideWin, int* result)
 {
     Sleep(1000);
     system("CLS");
+    sWinGameThread();
     SetConsoleMode(hIn, ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
     SetConsoleCursorPosition(hOut, { WINDOW_COLS / 3, WINDOW_LINES / 4 });
     SetConsoleTextAttribute(hOut, Colors::COLOR_WHITE);

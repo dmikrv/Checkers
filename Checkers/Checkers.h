@@ -9,21 +9,8 @@
 #define FIELD_WIDTH 8
 #define FIELD_HEIGHT 8
 
-#define BUTTONS_POS_X 19
-#define BUTTONS_POS_Y 1
-#define SIDESHOW_POS_X 18
-#define SIDESHOW_POS_Y 5
-#define SHOW_POS_X 18
-#define SHOW_POS_Y 3
-#define NUMBERING_POS_X 5
-#define NUMBERING_POS_Y 0
-#define FIELD_POS_X 6
-#define FIELD_POS_Y 1
-#define LEGENDMAP_POS_X 2
-#define LEGENDMAP_POS_Y 11
-
 #define GAME_WEBSITE "https://gitlab.com/fan1ech00/checkers"
-#define ROTATE_FIELD_SLEEP 400
+#define ROTATE_FIELD_SLEEP 500
 
 enum Side {
     SIDE_WHITE,

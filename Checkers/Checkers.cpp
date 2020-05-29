@@ -1,6 +1,7 @@
 ﻿#include "Checkers.h"
 #include "Menu.h"
 #include "Game.h"
+#include "Sounds.h"
 
 int main()
 {
@@ -8,7 +9,7 @@ int main()
     cursorVisible(hOut, false);
     HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE);
     SetConsoleMode(hIn, ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
-
+     
     SetConsoleTitleA(WINDOW_TITLE);
     resizeWindow(WINDOW_COLS, WINDOW_LINES);
     changeFont(hOut, WINDOW_FONT_SIZE, WINDOW_FONT_NAME);

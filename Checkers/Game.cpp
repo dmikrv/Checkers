@@ -71,7 +71,8 @@ void endGame(HANDLE& hOut, HANDLE& hIn, int sideWin, int* result);
 void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
 {
     cls(hIn);
-    sBeginGameThread();
+    // experiment
+    //endGame(hOut, hIn, SIDE_WHITE, result); return;
 
     unsigned char field[FIELD_HEIGHT][FIELD_WIDTH];
     int sideNow = (gameMode == GM_BLACK ? SIDE_BLACK : SIDE_WHITE);
@@ -82,6 +83,7 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
     DWORD cWrittenChars;
     DWORD count;
     COORD mousePoint;
+    bool repeatFlag[2]{ true };
 
     unsigned countBlack = 12;
     unsigned countWhite = 12;
@@ -112,34 +114,45 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
 
         // new game button
         if (mousePoint.X >= BUTTONS_POS_X && mousePoint.X < BUTTONS_POS_X + 8 && mousePoint.Y == BUTTONS_POS_Y) {
+            if (repeatFlag[0])
+                sSelectButtonThread();
+            repeatFlag[0] = false;
             FillConsoleOutputAttribute(hOut, (Colors::COLOR_BLUE << 4), 8, 
                 { BUTTONS_POS_X, BUTTONS_POS_Y }, &cWrittenChars);
             if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
+                sPressButtonThread();
                 *result = 0; // result is a formal argument
                 return;
             }
         }
         else {
+            repeatFlag[0] = true;
             FillConsoleOutputAttribute(hOut, Colors::COLOR_GRAY, 8,
                 { BUTTONS_POS_X, BUTTONS_POS_Y }, &cWrittenChars);
         }
         // menu button
         if (mousePoint.X >= BUTTONS_POS_X + 2 && mousePoint.X < BUTTONS_POS_X + 6 
             && mousePoint.Y == BUTTONS_POS_Y + 1) {
+            if (repeatFlag[1])
+                sSelectButtonThread();
+            repeatFlag[1] = false;
             FillConsoleOutputAttribute(hOut, (Colors::COLOR_BLUE << 4), 4,
                 { BUTTONS_POS_X + 2, BUTTONS_POS_Y + 1 }, &cWrittenChars);
             if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
+                sPressButtonThread();
                 *result = 1; // result is a formal argument
                 return;
             }
         }
         else {
+            repeatFlag[1] = true;
             FillConsoleOutputAttribute(hOut, Colors::COLOR_GRAY, 4,
                 { BUTTONS_POS_X + 2, BUTTONS_POS_Y + 1 }, &cWrittenChars);
         }
 
         // check for lack of moves
         if (isHaveAct(field, sideNow) == false) {
+            Sleep(1000);
             endGame(hOut, hIn, getInversionSide(sideNow), result);
             return;
         }
@@ -155,8 +168,9 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
                 && mousePoint.Y >= FIELD_POS_Y && mousePoint.Y < FIELD_POS_Y + FIELD_HEIGHT
                 && (mousePoint.X != selectedObject.X || mousePoint.Y != selectedObject.Y)) {
                 if ((obligatoryFlag == false || isAllowedBeat(field, mousePointRelative))
-                    && (beatCoord.X == -1 || 
-                        mousePointRelative.X == beatCoord.X && mousePointRelative.Y == beatCoord.Y)) {
+                    && (beatCoord.X == -1 
+                        || mousePointRelative.X == beatCoord.X && mousePointRelative.Y == beatCoord.Y)) {
+                    sSelectCheckerThread();
                     if (selectedObject.X != -1) {
                         FillConsoleOutputAttribute(hOut, sideNowColor, 1, selectedObject, &cWrittenChars);
                         showAllowedAction(hOut, field, selectedObjectRelative, true);
@@ -185,13 +199,8 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
                 if (isAllowedBeat(field, selectedObjectRelative, mousePointRelative) == true 
                     && selectedObject.X != -1 && mousePointRelative.X >= 0 && mousePointRelative.X < FIELD_WIDTH 
                     && mousePointRelative.Y >= 0 && mousePointRelative.Y < FIELD_HEIGHT) {
-                    selectedObject = { -1, 0 };
-
+                    sTakingThread();
                     takingChecker(field, selectedObjectRelative, mousePointRelative);
-                    if (getTypeObject(field, mousePointRelative) == TYPEOBJ_CHECKER)
-                        sTakingThread();
-                    else
-                        sTakingKingThread();
 
                     if (sideNow == SIDE_WHITE)
                         countBlack--;
@@ -222,6 +231,7 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
 
             // moving checkers
             else if (isAllowedMove(field, selectedObjectRelative, mousePointRelative) && selectedObject.X != -1) {
+                sMoveThread();
                 selectedObject = { -1, 0 };
                 field[mousePointRelative.Y][mousePointRelative.X] = 
                     field[selectedObjectRelative.Y][selectedObjectRelative.X];
@@ -231,13 +241,11 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
                     field[mousePointRelative.Y][mousePointRelative.X] = 
                         (sideNow == SIDE_WHITE ? OBJ_WHITE_KING : OBJ_BLACK_KING);
 
-                sMoveThread();
                 doneFlag = true;
             }
 
             // cancel action
             if ((mousePoint.X != selectedObject.X || mousePoint.Y != selectedObject.Y) && selectedObject.X != -1) {
-                sPressMouseThread();
                 FillConsoleOutputAttribute(hOut, sideNowColor, 1, selectedObject, &cWrittenChars);
                 showObligatoryCheckers(hOut, field, sideNow, true);
                 showAllowedAction(hOut, field, selectedObjectRelative, true);
@@ -257,19 +265,18 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
                 }
 
                 if (gameMode == GM_TWOPLAYER) {
-                    sRotatePlayerThread();
                     rotatePlayer(sideNow, sideNowColor);
                     rotateField(field);
                     Sleep(ROTATE_FIELD_SLEEP);
                     drawField(hOut, field, FIELD_POS_X, FIELD_POS_Y);
                     drawSideshow(hOut, sideNow, SIDESHOW_POS_X, SIDESHOW_POS_Y);
-                }             
+                }
+                FlushConsoleInputBuffer(hIn);
             }
         }
 
         // cancel action
         if (allEvents.Event.MouseEvent.dwButtonState == RIGHTMOST_BUTTON_PRESSED && selectedObject.X != -1) {
-            sPressMouseThread();
             FillConsoleOutputAttribute(hOut, sideNowColor, 1, selectedObject, &cWrittenChars);
             showAllowedAction(hOut, field, selectedObjectRelative, true);
             showObligatoryCheckers(hOut, field, sideNow, true);
@@ -413,7 +420,7 @@ bool isAllowedBeat(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj, CO
         == getInversionSide(sideNow)) {
         return true;
     }
-    else if (getTypeObject(field, obj) == TYPEOBJ_KING
+    if (getTypeObject(field, obj) == TYPEOBJ_KING
         && field[target.Y][target.X] == OBJ_EMPTY && myAbs(target.X - obj.X) == myAbs(target.Y - obj.Y)) {
         short _const = myAbs(target.X - obj.X);
         int countEnemyChecker = 0;
@@ -448,7 +455,7 @@ bool isAllowedBeat(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj)
             return true;
         }
     }
-    else {
+    if (getTypeObject(field, obj) == TYPEOBJ_KING) {
         COORD grad[4] = { {1, 1}, {1, -1}, {-1, 1}, {-1, -1} };
         for (short i = 0; i < 4; i++) {
             for (short j = 1;  obj.X + grad[i].X * j >= 1 && obj.X + grad[i].X * j < FIELD_WIDTH - 1
@@ -486,9 +493,11 @@ bool isAllowedMove(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj)
     if (getTypeObject(field, obj) == TYPEOBJ_KING) {
         return true;
     }
-    else if (field[obj.Y - 1][obj.X - 1] == OBJ_EMPTY || field[obj.Y - 1][obj.X + 1] == OBJ_EMPTY
-        && field[obj.Y + 1][obj.X - 1] == OBJ_EMPTY || field[obj.Y + 1][obj.X + 1] == OBJ_EMPTY) {
-        return true;
+    if (getTypeObject(field, obj) == TYPEOBJ_CHECKER && obj.Y - 1 >= 0) {
+        if ((field[obj.Y - 1][obj.X - 1] == OBJ_EMPTY && obj.X - 1 >= 0)
+            || (field[obj.Y - 1][obj.X + 1] == OBJ_EMPTY && obj.X + 1 < FIELD_WIDTH)) {
+            return true;
+        }
     }
     return false;
 }
@@ -502,7 +511,7 @@ bool isAllowedMove(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj, CO
                 return true;
             }
         }
-        else {
+        if (getTypeObject(field, obj) == TYPEOBJ_KING) {
             if (myAbs(target.X - obj.X) == myAbs(target.Y - obj.Y)) {
                 int _const = myAbs(target.X - obj.X);
                 COORD grad = calculateGradient(obj, target);
@@ -595,7 +604,7 @@ void showAllowedMove(HANDLE& hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH
             }
         }
     }
-    else {
+    if (getTypeObject(field, obj) == TYPEOBJ_KING) {
         for (short i = 0; i < 4; i++) {
             for (short j = 1; (obj.X + grad[i].X * j >= 0 && obj.X + grad[i].X * j < FIELD_WIDTH
                 && obj.Y + grad[i].Y * j >= 0 && obj.Y + grad[i].Y * j < FIELD_HEIGHT); j++) {
@@ -671,11 +680,15 @@ COORD calculateGradient(COORD obj, COORD target)
 
 inline COORD getRelativePoint(COORD c)
 {
+    if (c.X == -1)
+        return { -1, 0 };
     return { c.X - FIELD_POS_X, c.Y - FIELD_POS_Y };
 }
 
 inline COORD getAbsolutePoint(COORD c)
 {
+    if (c.X == -1)
+        return { -1, 0 };
     return { c.X + FIELD_POS_X, c.Y + FIELD_POS_Y };
 }
 
@@ -706,11 +719,9 @@ int getTypeObject(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj)
 }
 
 void endGame(HANDLE &hOut, HANDLE &hIn, int sideWin, int* result)
-{
+{ 
     Sleep(1000);
-    system("CLS");
-    sWinGameThread();
-    SetConsoleMode(hIn, ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
+    cls(hIn);
     SetConsoleCursorPosition(hOut, { WINDOW_COLS / 3, WINDOW_LINES / 4 });
     SetConsoleTextAttribute(hOut, Colors::COLOR_WHITE);
     if (sideWin == SIDE_WHITE) {
@@ -724,6 +735,7 @@ void endGame(HANDLE &hOut, HANDLE &hIn, int sideWin, int* result)
     DWORD count;
     COORD mousePoint;
     DWORD cWrittenChars;
+    bool repeatFlag[3]{ true };
 
     COORD buttNewgame{ WINDOW_COLS / 2 - 4, 6 };
     COORD buttMenu{ WINDOW_COLS / 2 - 2, 7 };
@@ -745,36 +757,54 @@ void endGame(HANDLE &hOut, HANDLE &hIn, int sideWin, int* result)
         if (allEvents.EventType == MOUSE_EVENT) {
             // new game
             if (mousePoint.Y == buttNewgame.Y && mousePoint.X >= buttNewgame.X && mousePoint.X < buttNewgame.X + 8) {
+                if (repeatFlag[0])
+                    sSelectButtonThread();
+                repeatFlag[0] = false;
                 FillConsoleOutputAttribute(hOut, (Colors::COLOR_BLUE << 4), 8, buttNewgame, &cWrittenChars);
                 if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
+                    sStopThread();
+                    sPressButtonThread();
                     *result = 0;
                     return;
                 }
             } 
             else {
+                repeatFlag[0] = true;
                 FillConsoleOutputAttribute(hOut, Colors::COLOR_GRAY, 8, buttNewgame, &cWrittenChars);
             }
                 
             // menu
             if (mousePoint.Y == buttMenu.Y && mousePoint.X >= buttMenu.X && mousePoint.X < buttMenu.X + 4) {
+                if (repeatFlag[1])
+                    sSelectButtonThread();
+                repeatFlag[1] = false;
                 FillConsoleOutputAttribute(hOut, (Colors::COLOR_BLUE << 4), 4, buttMenu, &cWrittenChars);
                 if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
+                    sStopThread();
+                    sPressButtonThread();
                     *result = 1;
                     return;
                 }
             }       
             else {
+                repeatFlag[1] = true;
                 FillConsoleOutputAttribute(hOut, Colors::COLOR_GRAY, 4, buttMenu, &cWrittenChars);
             }
                 
             // exit
             if (mousePoint.Y == buttExit.Y && mousePoint.X >= buttExit.X && mousePoint.X < buttExit.X + 4) {
+                if (repeatFlag[2])
+                    sSelectButtonThread();
+                repeatFlag[2] = false;
                 FillConsoleOutputAttribute(hOut, (Colors::COLOR_BLUE << 4), 4, buttExit, &cWrittenChars);
                 if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED) {
+                    sStopThread();
+                    sPressButtonThread();
                     exit(0);
                 }
             } 
             else {
+                repeatFlag[2] = true;
                 FillConsoleOutputAttribute(hOut, Colors::COLOR_GRAY, 4, buttExit, &cWrittenChars);
             }
         }

@@ -68,28 +68,16 @@
     <Media Include="sounds\taking.wav">
       <Filter>Файлы ресурсов</Filter>
     </Media>
-    <Media Include="sounds\taking_king.wav">
-      <Filter>Файлы ресурсов</Filter>
-    </Media>
-    <Media Include="sounds\begin_game.wav">
-      <Filter>Файлы ресурсов</Filter>
-    </Media>
     <Media Include="sounds\inaccessible_checker.wav">
-      <Filter>Файлы ресурсов</Filter>
-    </Media>
-    <Media Include="sounds\press_mouse.wav">
-      <Filter>Файлы ресурсов</Filter>
-    </Media>
-    <Media Include="sounds\rotate_player.wav">
       <Filter>Файлы ресурсов</Filter>
     </Media>
     <Media Include="sounds\select_button.wav">
       <Filter>Файлы ресурсов</Filter>
     </Media>
-    <Media Include="sounds\win_game.wav">
+    <Media Include="sounds\press_button.wav">
       <Filter>Файлы ресурсов</Filter>
     </Media>
-    <Media Include="sounds\press_button.wav">
+    <Media Include="sounds\select_checker.wav">
       <Filter>Файлы ресурсов</Filter>
     </Media>
   </ItemGroup>

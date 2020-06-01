@@ -245,16 +245,12 @@
     <ResourceCompile Include="Checkers.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Media Include="sounds\begin_game.wav" />
     <Media Include="sounds\inaccessible_checker.wav" />
     <Media Include="sounds\move.wav" />
     <Media Include="sounds\press_button.wav" />
-    <Media Include="sounds\press_mouse.wav" />
-    <Media Include="sounds\rotate_player.wav" />
     <Media Include="sounds\select_button.wav" />
+    <Media Include="sounds\select_checker.wav" />
     <Media Include="sounds\taking.wav" />
-    <Media Include="sounds\taking_king.wav" />
-    <Media Include="sounds\win_game.wav" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

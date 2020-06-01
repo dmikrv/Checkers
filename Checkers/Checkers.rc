@@ -64,19 +64,11 @@ IDR_WAVE1               WAVE                    "sounds\\move.wav"
 
 IDR_WAVE2               WAVE                    "sounds\\taking.wav"
 
-IDR_WAVE3               WAVE                    "sounds\\taking_king.wav"
-
-IDR_WAVE4               WAVE                    "sounds\\begin_game.wav"
-
 IDR_WAVE5               WAVE                    "sounds\\inaccessible_checker.wav"
 
-IDR_WAVE6               WAVE                    "sounds\\press_mouse.wav"
-
-IDR_WAVE7               WAVE                    "sounds\\rotate_player.wav"
+IDR_WAVE6               WAVE                    "sounds\\select_checker.wav"
 
 IDR_WAVE8               WAVE                    "sounds\\select_button.wav"
-
-IDR_WAVE9               WAVE                    "sounds\\win_game.wav"
 
 IDR_WAVE10              WAVE                    "sounds\\press_button.wav"
 

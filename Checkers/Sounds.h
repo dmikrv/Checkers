@@ -3,11 +3,8 @@
 
 void sMoveThread();
 void sTakingThread();
-void sTakingKingThread();
-void sBeginGameThread();
 void sInaccessibleChThread();
-void sPressMouseThread();
-void sRotatePlayerThread();
+void sSelectCheckerThread();
 void sSelectButtonThread();
-void sWinGameThread();
+void sStopThread();
 void sPressButtonThread();

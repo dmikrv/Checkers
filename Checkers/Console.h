@@ -10,6 +10,14 @@ void changeFont(HANDLE& hOut, int fontSize, const wchar_t* fontName);
 void openUrl(LPCSTR url);
 void cls(HANDLE& hIn);
 
+void drawText(HANDLE& hOut, short posY, int windowCols, char* text, int color);
+int getLettersInWord(char* text);
+
+bool strcatK(char* destination, int buffSize, const char* source);
+bool strcatK(char* destination, int buffSize, const char source);
+bool strcatK(char* destination, int buffSize, const int source);
+void backspaceText(char* text);
+
 namespace Colors {
     enum Colors {
         COLOR_BLACK = 0,

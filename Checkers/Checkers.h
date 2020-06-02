@@ -11,6 +11,7 @@
 
 #define GAME_WEBSITE "https://gitlab.com/fan1ech00/checkers"
 #define ROTATE_FIELD_SLEEP 500
+#define BUFFER_SIZE 12
 
 enum Side {
     SIDE_WHITE,

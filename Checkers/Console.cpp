@@ -58,3 +58,82 @@ void cls(HANDLE& hIn)
     system("CLS");
     SetConsoleMode(hIn, ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
 }
+
+void drawText(HANDLE& hOut, short posY, int windowCols, char* text, int color)
+{
+    SetConsoleTextAttribute(hOut, color);
+    SetConsoleCursorPosition(hOut, { static_cast<short>((windowCols - getLettersInWord(text)) / 2), posY });
+    std::cout << text;
+}
+
+int getLettersInWord(char* text)
+{
+    int i = 0;
+    char* temp = text;
+    for (; *temp; temp++) {
+        i++;
+    }
+    return i;
+}
+
+bool strcatK(char* destination, int buffSize, const char* source)
+{
+    char* ptr = destination;
+    int i = 0;
+    for (; i < buffSize; i++) {
+        if (*ptr == '\0')
+            break;
+        ptr++;
+    }
+    int lettersInSource = getLettersInWord(const_cast<char*>(source));
+    if (lettersInSource > buffSize - i)
+        return 0;
+    char* sourcePtr = const_cast<char*>(source);
+    for (int j = 0; j < lettersInSource; j++) {
+        *ptr = *sourcePtr;
+        ptr++;
+        sourcePtr++;
+    }
+    return 1;
+}
+
+bool strcatK(char* destination, int buffSize, const char source)
+{
+    char* ptr = destination;
+    int i = 0;
+    for (; i < buffSize; i++) {
+        if (*ptr == '\0')
+            break;
+        ptr++;
+    }
+    if (i != buffSize - 1) {
+        *ptr = source;
+        return 1;
+    }
+    return 0;
+}
+
+bool strcatK(char* destination, int buffSize, const int source)
+{
+    char* ptr = destination;
+    int i = 0;
+    for (; i < buffSize; i++) {
+        if (*ptr == '\0')
+            break;
+        ptr++;
+    }
+    if (i != buffSize - 1) {
+        *ptr = source + 48;
+        return 1;
+    }
+    return 0;
+}
+
+void backspaceText(char* text)
+{
+    char* ptr = text;
+    while (*ptr != '\0')
+        ptr++;
+    ptr--;
+    *ptr = '\0';
+}

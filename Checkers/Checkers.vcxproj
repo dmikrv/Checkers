@@ -226,12 +226,14 @@
   <ItemGroup>
     <ClCompile Include="Checkers.cpp" />
     <ClCompile Include="Console.cpp" />
+    <ClCompile Include="EnterName.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Menu.cpp" />
     <ClCompile Include="Sounds.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Console.h" />
+    <ClInclude Include="EnterName.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="Menu.h" />
     <ClInclude Include="Checkers.h" />

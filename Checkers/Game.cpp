@@ -3,7 +3,7 @@
 #define BUTTONS_POS_X 19
 #define BUTTONS_POS_Y 1
 #define SIDESHOW_POS_X 18
-#define SIDESHOW_POS_Y 5
+#define SIDESHOW_POS_Y 4
 #define SHOW_POS_X 18
 #define SHOW_POS_Y 3
 #define NUMBERING_POS_X 5
@@ -39,7 +39,7 @@ void takingChecker(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj, CO
 
 void drawField(HANDLE& hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], short X, short Y);
 void drawCount(HANDLE& hOut, unsigned int countBl, unsigned int countWh);
-void drawSideshow(HANDLE& hOut, int sideNow, short X, short Y);
+void drawSideshow(HANDLE& hOut, char* playerName1, char* playerName2, int sideNow, short X, short Y);
 void drawNumbering(HANDLE& hOut, short X, short Y);
 void drawLegendMap(HANDLE& hOut, short X, short Y);
 void drawButtons(HANDLE& hOut, short X, short Y);
@@ -66,13 +66,13 @@ int getTypeObject(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj);
 inline COORD getRelativePoint(COORD c);
 inline COORD getAbsolutePoint(COORD c);
 
-void endGame(HANDLE& hOut, HANDLE& hIn, int sideWin, int* result);
+void endGame(HANDLE& hOut, HANDLE& hIn, char* playerName1, char* playerName2, int sideWin, int* result);
 
-void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
+void game(HANDLE& hOut, HANDLE& hIn, char* playerName1, char* playerName2, int gameMode, int* result)
 {
     cls(hIn);
     // experiment
-    //endGame(hOut, hIn, SIDE_WHITE, result); return;
+    //endGame(hOut, hIn, playerName1, playerName2, SIDE_BLACK, result); return;
 
     unsigned char field[FIELD_HEIGHT][FIELD_WIDTH];
     int sideNow = (gameMode == GM_BLACK ? SIDE_BLACK : SIDE_WHITE);
@@ -96,7 +96,7 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
                               // X=-1 -- beat checker is not active
 
     if (gameMode == GM_TWOPLAYER)
-        drawSideshow(hOut, sideNow, SIDESHOW_POS_X, SIDESHOW_POS_Y);
+        drawSideshow(hOut, playerName1, playerName2, sideNow, SIDESHOW_POS_X, SIDESHOW_POS_Y);
     drawNumbering(hOut, NUMBERING_POS_X, NUMBERING_POS_Y);
     drawLegendMap(hOut, LEGENDMAP_POS_X, LEGENDMAP_POS_Y);
     drawField(hOut, field, FIELD_POS_X, FIELD_POS_Y);
@@ -153,7 +153,7 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
         // check for lack of moves
         if (isHaveAct(field, sideNow) == false) {
             Sleep(1000);
-            endGame(hOut, hIn, getInversionSide(sideNow), result);
+            endGame(hOut, hIn, playerName1, playerName2, getInversionSide(sideNow), result);
             return;
         }
         // check for obligatory moves
@@ -260,7 +260,7 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
 
                 // check for the presence of checkers on the enemy side
                 if ((sideNow == SIDE_WHITE && countBlack == 0) || (sideNow == SIDE_BLACK && countWhite == 0)) {
-                    endGame(hOut, hIn, sideNow, result);
+                    endGame(hOut, hIn, playerName1, playerName2, sideNow, result);
                     return;
                 }
 
@@ -269,7 +269,7 @@ void game(HANDLE& hOut, HANDLE& hIn, int gameMode, int* result)
                     rotateField(field);
                     Sleep(ROTATE_FIELD_SLEEP);
                     drawField(hOut, field, FIELD_POS_X, FIELD_POS_Y);
-                    drawSideshow(hOut, sideNow, SIDESHOW_POS_X, SIDESHOW_POS_Y);
+                    drawSideshow(hOut, playerName1, playerName2, sideNow, SIDESHOW_POS_X, SIDESHOW_POS_Y);
                 }
                 FlushConsoleInputBuffer(hIn);
             }
@@ -355,17 +355,28 @@ void drawCount(HANDLE &hOut, unsigned int countBl, unsigned int countWh)
     std::cout << "BLACK: " << countBl << " ";
 }
 
-void drawSideshow(HANDLE &hOut, int sideNow, short X, short Y)
+void drawSideshow(HANDLE& hOut, char* playerName1, char* playerName2, int sideNow, short X, short Y)
 {
-    SetConsoleCursorPosition(hOut, { X, Y });
     SetConsoleTextAttribute(hOut, Colors::COLOR_YELLOW);
-    if (sideNow == SIDE_WHITE)
-        std::cout << "WHITE MOVE";
-    else
-        std::cout << "BLACK MOVE";
+    if (sideNow == SIDE_WHITE) {
+        SetConsoleCursorPosition(hOut, { X, Y });
+        std::cout << "            ";
+        SetConsoleCursorPosition(hOut, { X, Y });
+        std::cout << playerName1;
+        SetConsoleCursorPosition(hOut, { X, Y + 1});
+        std::cout << "WHITE";
+    }
+    else if (sideNow == SIDE_BLACK) {
+        SetConsoleCursorPosition(hOut, { X, Y });
+        std::cout << "             ";
+        SetConsoleCursorPosition(hOut, { X, Y });
+        std::cout << playerName2;
+        SetConsoleCursorPosition(hOut, { X, Y + 1 });
+        std::cout << "BLACK";
+    }
 }
 
-void drawNumbering(HANDLE &hOut, short X, short Y)
+void drawNumbering(HANDLE& hOut, short X, short Y)
 {
     SetConsoleTextAttribute(hOut, Colors::COLOR_WHITE);
     for (short i = 0; i < 10; i++) {
@@ -718,17 +729,20 @@ int getTypeObject(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj)
         return -1;
 }
 
-void endGame(HANDLE &hOut, HANDLE &hIn, int sideWin, int* result)
+void endGame(HANDLE& hOut, HANDLE& hIn, char* playerName1, char* playerName2, int sideWin, int* result)
 { 
     Sleep(1000);
     cls(hIn);
-    SetConsoleCursorPosition(hOut, { WINDOW_COLS / 3, WINDOW_LINES / 4 });
-    SetConsoleTextAttribute(hOut, Colors::COLOR_WHITE);
+    char text[BUFFER_SIZE + 5]{};
     if (sideWin == SIDE_WHITE) {
-        std::cout << "WHITE WIN!";
+        strcatK(text, BUFFER_SIZE + 5, playerName1);
+        strcatK(text, BUFFER_SIZE + 5, " WIN!");
+        drawText(hOut, WINDOW_LINES / 4, WINDOW_COLS, text, Colors::COLOR_WHITE);
     }
     else {
-        std::cout << "BLACK WIN!";
+        strcatK(text, BUFFER_SIZE + 5, playerName2);
+        strcatK(text, BUFFER_SIZE + 5, " WIN!");
+        drawText(hOut, WINDOW_LINES / 4, WINDOW_COLS, text, Colors::COLOR_WHITE);
     }
 
     INPUT_RECORD allEvents;

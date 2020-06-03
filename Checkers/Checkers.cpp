@@ -24,7 +24,8 @@ int main()
         // buff = 1 : menu
         while (buff == 1) {
             menu(hOut, hIn, &gameMode);
-            enterPlayersName(hOut, hIn, playerName1, playerName2, BUFFER_SIZE, &buff);
+            if (gameMode == GM_TWOPLAYER)
+                enterPlayersName(hOut, hIn, playerName1, playerName2, BUFFER_SIZE, &buff);
         }
         game(hOut, hIn, playerName1, playerName2, gameMode, &buff);
     }

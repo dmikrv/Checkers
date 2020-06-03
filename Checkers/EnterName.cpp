@@ -44,7 +44,8 @@ void drawButtons(HANDLE& hOut, COORD back, COORD next)
 void drawName(HANDLE& hOut, char* text, short posY)
 {
     SetConsoleTextAttribute(hOut, Colors::COLOR_RED);
-    SetConsoleCursorPosition(hOut, { static_cast<short>((WINDOW_COLS - getLettersInWord(text)) / 2), posY });
+    SetConsoleCursorPosition(hOut, { static_cast<short>((WINDOW_COLS - getLettersInWord(text)) / 2),
+        posY });
     std::cout << text;
 }
 
@@ -68,14 +69,19 @@ void enterPlayerName(HANDLE& hOut, HANDLE& hIn, char* playerName, int buffSize, 
         mousePoint.Y = allEvents.Event.MouseEvent.dwMousePosition.Y;
 
         drawName(hOut, playerName, WORD_POS_Y);
-        FillConsoleOutputAttribute(hOut, Colors::COLOR_WHITE, WINDOW_COLS, { 0, KEYBOARD_NUMBER_POS_Y }, &cWrittenChars);
-        FillConsoleOutputAttribute(hOut, Colors::COLOR_WHITE, WINDOW_COLS, { 0, KEYBOARD_LATIN1_POS_Y }, &cWrittenChars);
-        FillConsoleOutputAttribute(hOut, Colors::COLOR_WHITE, WINDOW_COLS, { 0, KEYBOARD_LATIN2_POS_Y }, &cWrittenChars);
-        FillConsoleOutputAttribute(hOut, Colors::COLOR_GRAY, WINDOW_COLS, { 0, buttonNext.Y }, &cWrittenChars);
+        FillConsoleOutputAttribute(hOut, Colors::COLOR_WHITE, WINDOW_COLS, { 0, KEYBOARD_NUMBER_POS_Y },
+            &cWrittenChars);
+        FillConsoleOutputAttribute(hOut, Colors::COLOR_WHITE, WINDOW_COLS, { 0, KEYBOARD_LATIN1_POS_Y },
+            &cWrittenChars);
+        FillConsoleOutputAttribute(hOut, Colors::COLOR_WHITE, WINDOW_COLS, { 0, KEYBOARD_LATIN2_POS_Y },
+            &cWrittenChars);
+        FillConsoleOutputAttribute(hOut, Colors::COLOR_GRAY, WINDOW_COLS, { 0, buttonNext.Y },
+            &cWrittenChars);
 
         // numbering
         if (mousePoint.X >= KEYBOARD_NUMBER_POS_X && mousePoint.X < KEYBOARD_NUMBER_POS_X + 19
-            && mousePoint.Y == KEYBOARD_NUMBER_POS_Y && (mousePoint.X % 2 == 0) && strlen(playerName) < buffSize - 1) {
+            && mousePoint.Y == KEYBOARD_NUMBER_POS_Y && (mousePoint.X % 2 == 0) 
+            && strlen(playerName) < buffSize - 1 && playerName[0] != '\0') {
             FillConsoleOutputAttribute(hOut, (Colors::COLOR_BLUE << 4), 1, mousePoint, &cWrittenChars);
             if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED
                 && allEvents.Event.MouseEvent.dwEventFlags != MOUSE_MOVED) {
@@ -85,7 +91,8 @@ void enterPlayerName(HANDLE& hOut, HANDLE& hIn, char* playerName, int buffSize, 
             }
         }
         // backspace
-        else if (mousePoint.X == KEYBOARD_BACKSPACE_POS_X && mousePoint.Y == KEYBOARD_BACKSPACE_POS_Y) {
+        else if (mousePoint.X == KEYBOARD_BACKSPACE_POS_X && mousePoint.Y == KEYBOARD_BACKSPACE_POS_Y
+            && playerName[0] != '\0') {
             FillConsoleOutputAttribute(hOut, (Colors::COLOR_BLUE << 4), 1, mousePoint, &cWrittenChars);
             if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED
                 && allEvents.Event.MouseEvent.dwEventFlags != MOUSE_MOVED) {
@@ -97,7 +104,8 @@ void enterPlayerName(HANDLE& hOut, HANDLE& hIn, char* playerName, int buffSize, 
             }
         }
         // keyboard first part
-        else if (mousePoint.Y == KEYBOARD_LATIN1_POS_Y && (mousePoint.X % 2 == 0) && strlen(playerName) < buffSize - 1
+        else if (mousePoint.Y == KEYBOARD_LATIN1_POS_Y && (mousePoint.X % 2 == 0) 
+            && strlen(playerName) < buffSize - 1
             && mousePoint.X >= KEYBOARD_LATIN1_POS_X && mousePoint.X <= KEYBOARD_LATIN1_POS_X + 24) {
             FillConsoleOutputAttribute(hOut, (Colors::COLOR_BLUE << 4), 1, mousePoint, &cWrittenChars);
             if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED
@@ -108,7 +116,8 @@ void enterPlayerName(HANDLE& hOut, HANDLE& hIn, char* playerName, int buffSize, 
             }
         }
         // keyboard second part
-        else if (mousePoint.Y == KEYBOARD_LATIN2_POS_Y && (mousePoint.X % 2 == 0) && strlen(playerName) < buffSize - 1
+        else if (mousePoint.Y == KEYBOARD_LATIN2_POS_Y && (mousePoint.X % 2 == 0) 
+            && strlen(playerName) < buffSize - 1
             && mousePoint.X >= KEYBOARD_LATIN2_POS_X && mousePoint.X <= KEYBOARD_LATIN2_POS_X + 24) {
             FillConsoleOutputAttribute(hOut, (Colors::COLOR_BLUE << 4), 1, mousePoint, &cWrittenChars);
             if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED
@@ -119,7 +128,8 @@ void enterPlayerName(HANDLE& hOut, HANDLE& hIn, char* playerName, int buffSize, 
             }
         }
         // button Cancel
-        else if (mousePoint.Y == buttonBack.Y && mousePoint.X >= buttonBack.X && mousePoint.X < buttonBack.X + 4) {
+        else if (mousePoint.Y == buttonBack.Y && mousePoint.X >= buttonBack.X 
+            && mousePoint.X < buttonBack.X + 4) {
             FillConsoleOutputAttribute(hOut, (Colors::COLOR_BLUE << 4), 4, buttonBack, &cWrittenChars);
             if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED
                 && allEvents.Event.MouseEvent.dwEventFlags != MOUSE_MOVED) {
@@ -129,7 +139,8 @@ void enterPlayerName(HANDLE& hOut, HANDLE& hIn, char* playerName, int buffSize, 
             }
         }
         // button Next
-        if (mousePoint.Y == buttonNext.Y && mousePoint.X >= buttonNext.X && mousePoint.X < buttonNext.X + 4
+        if (mousePoint.Y == buttonNext.Y && mousePoint.X >= buttonNext.X 
+            && mousePoint.X < buttonNext.X + 4
             && strlen(playerName) > 0) {
             FillConsoleOutputAttribute(hOut, (Colors::COLOR_BLUE << 4), 4, buttonNext, &cWrittenChars);
             if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED
@@ -143,7 +154,8 @@ void enterPlayerName(HANDLE& hOut, HANDLE& hIn, char* playerName, int buffSize, 
     }
 }
 
-void enterPlayersName(HANDLE& hOut, HANDLE& hIn, char* playerName1, char* playerName2, int buffSize, int* result)
+void enterPlayersName(HANDLE& hOut, HANDLE& hIn, char* playerName1, char* playerName2, 
+    int buffSize, int* result)
 {
     int buff = 0;
     // buff = 0 : button Cancel
@@ -157,7 +169,8 @@ void enterPlayersName(HANDLE& hOut, HANDLE& hIn, char* playerName1, char* player
             return;
         }
         cls(hIn);
-        drawText(hOut, 1, WINDOW_COLS, const_cast<char*>("Enter second player name"), Colors::COLOR_WHITE);
+        drawText(hOut, 1, WINDOW_COLS, const_cast<char*>("Enter second player name"),
+            Colors::COLOR_WHITE);
         enterPlayerName(hOut, hIn, playerName2, buffSize, &buff);
         if (buff == 1 && strcmp(playerName1, playerName2) != 0) {
             *result = 0; // game

@@ -36,7 +36,8 @@ DWORD WINAPI sSelectChecker(void* p)
 
 DWORD WINAPI sSelectButton(void* p)
 {
-	PlaySound(MAKEINTRESOURCE(SOUND_SELECT_BUTTON), GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC | SND_NOSTOP);
+	PlaySound(MAKEINTRESOURCE(SOUND_SELECT_BUTTON), GetModuleHandle(NULL), SND_RESOURCE | SND_ASYNC 
+		| SND_NOSTOP);
 	return 0;
 }
 

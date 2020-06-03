@@ -62,7 +62,8 @@ void cls(HANDLE& hIn)
 void drawText(HANDLE& hOut, short posY, int windowCols, char* text, int color)
 {
     SetConsoleTextAttribute(hOut, color);
-    SetConsoleCursorPosition(hOut, { static_cast<short>((windowCols - getLettersInWord(text)) / 2), posY });
+    SetConsoleCursorPosition(hOut, { static_cast<short>((windowCols - getLettersInWord(text)) / 2),
+        posY });
     std::cout << text;
 }
 

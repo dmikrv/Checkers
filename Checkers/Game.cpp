@@ -37,12 +37,12 @@ void rotateField(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH]);
 void rotatePlayer(int& sideNow, int& sideNowColor);
 void takingChecker(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj, COORD target);
 
-void drawField(HANDLE& hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], short X, short Y);
-void drawCount(HANDLE& hOut, unsigned int countBl, unsigned int countWh);
-void drawSideshow(HANDLE& hOut, char* playerName1, char* playerName2, int sideNow, short X, short Y);
-void drawNumbering(HANDLE& hOut, short X, short Y);
-void drawLegendMap(HANDLE& hOut, short X, short Y);
-void drawButtons(HANDLE& hOut, short X, short Y);
+void drawField(HANDLE hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], short X, short Y);
+void drawCount(HANDLE hOut, unsigned int countBl, unsigned int countWh);
+void drawSideshow(HANDLE hOut, char* playerName1, char* playerName2, int sideNow, short X, short Y);
+void drawNumbering(HANDLE hOut, short X, short Y);
+void drawLegendMap(HANDLE hOut, short X, short Y);
+void drawButtons(HANDLE hOut, short X, short Y);
 
 bool isObligatoryMove(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], int sideNow);
 bool isAllowedMove(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj, COORD target);
@@ -52,10 +52,10 @@ bool isAllowedBeat(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj);
 bool isHaveAct(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], int sideNow);
 
 // show checkers with which you need to take the enemy cheker
-void showObligatoryCheckers(HANDLE& hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], int sideNow,
+void showObligatoryCheckers(HANDLE hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], int sideNow,
     bool isInversionAction = false);
 // show possible actions of checkers
-void showAllowedAction(HANDLE& hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj,
+void showAllowedAction(HANDLE hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj,
     bool isInversionAction = false);
 // calculation of the gradient, direction of movement
 COORD calculateGradient(COORD obj, COORD target);
@@ -66,9 +66,9 @@ int getTypeObject(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj);
 inline COORD getRelativePoint(COORD c);
 inline COORD getAbsolutePoint(COORD c);
 
-void endGame(HANDLE& hOut, HANDLE& hIn, char* playerName1, char* playerName2, int sideWin, int* result);
+void endGame(HANDLE hOut, HANDLE hIn, char* playerName1, char* playerName2, int sideWin, int* result);
 
-void game(HANDLE& hOut, HANDLE& hIn, char* playerName1, char* playerName2, int gameMode, int* result)
+void game(HANDLE hOut, HANDLE hIn, char* playerName1, char* playerName2, int gameMode, int* result)
 {
     cls(hIn);
     // experiment
@@ -83,7 +83,7 @@ void game(HANDLE& hOut, HANDLE& hIn, char* playerName1, char* playerName2, int g
     DWORD cWrittenChars;
     DWORD count;
     COORD mousePoint;
-    bool repeatFlag[2]{ true };
+    bool repeatFlag[2]{ true }; // saves the state of the button; whether the cursor is on it
 
     unsigned countBlack = 12;
     unsigned countWhite = 12;
@@ -326,7 +326,7 @@ void initField(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], int gameMode)
     }
 }
 
-void drawField(HANDLE &hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], short X, short Y)
+void drawField(HANDLE hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], short X, short Y)
 {
     for (short i = 0; i < FIELD_HEIGHT; i++) {
         for (short j = 0; j < FIELD_WIDTH; j++) {
@@ -358,7 +358,7 @@ void drawField(HANDLE &hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], sho
     }
 }
 
-void drawCount(HANDLE &hOut, unsigned int countBl, unsigned int countWh)
+void drawCount(HANDLE hOut, unsigned int countBl, unsigned int countWh)
 {
     SetConsoleCursorPosition(hOut, { SHOW_POS_X, SHOW_POS_Y + 4 });
     SetConsoleTextAttribute(hOut, Colors::COLOR_WHITE);
@@ -367,7 +367,7 @@ void drawCount(HANDLE &hOut, unsigned int countBl, unsigned int countWh)
     std::cout << "BLACK: " << countBl << " ";
 }
 
-void drawSideshow(HANDLE& hOut, char* playerName1, char* playerName2, int sideNow, short X, short Y)
+void drawSideshow(HANDLE hOut, char* playerName1, char* playerName2, int sideNow, short X, short Y)
 {
     SetConsoleTextAttribute(hOut, Colors::COLOR_YELLOW);
     if (sideNow == SIDE_WHITE) {
@@ -388,7 +388,7 @@ void drawSideshow(HANDLE& hOut, char* playerName1, char* playerName2, int sideNo
     }
 }
 
-void drawNumbering(HANDLE& hOut, short X, short Y)
+void drawNumbering(HANDLE hOut, short X, short Y)
 {
     SetConsoleTextAttribute(hOut, Colors::COLOR_WHITE);
     for (short i = 0; i < 10; i++) {
@@ -406,7 +406,7 @@ void drawNumbering(HANDLE& hOut, short X, short Y)
     }
 }
 
-void drawLegendMap(HANDLE &hOut, short X, short Y)
+void drawLegendMap(HANDLE hOut, short X, short Y)
 {
     SetConsoleCursorPosition(hOut, { X, Y });
     SetConsoleTextAttribute(hOut, Colors::COLOR_WHITE);
@@ -423,7 +423,7 @@ void drawLegendMap(HANDLE &hOut, short X, short Y)
     std::cout << char(178) << " - black king";
 }
 
-void drawButtons(HANDLE& hOut, short X, short Y)
+void drawButtons(HANDLE hOut, short X, short Y)
 {
     SetConsoleCursorPosition(hOut, { X, Y });
     SetConsoleTextAttribute(hOut, Colors::COLOR_GRAY);
@@ -552,7 +552,7 @@ bool isAllowedMove(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj, CO
     return false;
 }
 
-void showObligatoryCheckers(HANDLE& hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], int sideNow,
+void showObligatoryCheckers(HANDLE hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], int sideNow,
     bool isInversionAction)
 {
     DWORD cWrittenChars;
@@ -568,7 +568,7 @@ void showObligatoryCheckers(HANDLE& hOut, unsigned char field[FIELD_HEIGHT][FIEL
     }
 }
 
-void showAllowedBeat(HANDLE& hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj,
+void showAllowedBeat(HANDLE hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj,
     bool isInversionAction)
 {
     int sideNow = whoseObject(field, obj);
@@ -614,7 +614,7 @@ void showAllowedBeat(HANDLE& hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH
     }
 }
 
-void showAllowedMove(HANDLE& hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj,
+void showAllowedMove(HANDLE hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj,
     bool isInversionAction)
 {
     DWORD cWrittenChars;
@@ -648,7 +648,7 @@ void showAllowedMove(HANDLE& hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH
     }
 }
 
-void showAllowedAction(HANDLE& hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj,
+void showAllowedAction(HANDLE hOut, unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj,
     bool isInversionAction)
 {
     if (isAllowedBeat(field, obj))
@@ -747,7 +747,7 @@ int getTypeObject(unsigned char field[FIELD_HEIGHT][FIELD_WIDTH], COORD obj)
         return -1;
 }
 
-void endGame(HANDLE& hOut, HANDLE& hIn, char* playerName1, char* playerName2, int sideWin, int* result)
+void endGame(HANDLE hOut, HANDLE hIn, char* playerName1, char* playerName2, int sideWin, int* result)
 { 
     Sleep(1000);
     cls(hIn);
@@ -767,7 +767,7 @@ void endGame(HANDLE& hOut, HANDLE& hIn, char* playerName1, char* playerName2, in
     DWORD count;
     COORD mousePoint;
     DWORD cWrittenChars;
-    bool repeatFlag[3]{ true };
+    bool repeatFlag[3]{ true }; // saves the state of the button; whether the cursor is on it
 
     COORD buttNewgame{ WINDOW_COLS / 2 - 4, 6 };
     COORD buttMenu{ WINDOW_COLS / 2 - 2, 7 };

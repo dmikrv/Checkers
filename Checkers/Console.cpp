@@ -35,7 +35,7 @@ void drawPosition(HANDLE hout, int color, COORD where, COORD what)
     std::cout << "  Y: " << what.Y << "   ";
 }
 
-void changeFont(HANDLE& hOut, int fontSize, const wchar_t* fontName)
+void changeFont(HANDLE hOut, int fontSize, const wchar_t* fontName)
 {
     CONSOLE_FONT_INFOEX cfi;
     cfi.cbSize = sizeof(cfi);
@@ -53,13 +53,13 @@ void openUrl(LPCSTR url)
     ShellExecuteA(NULL, "open", url, NULL, NULL, SW_SHOWDEFAULT);
 }
 
-void cls(HANDLE& hIn)
+void cls(HANDLE hIn)
 {
     system("CLS");
     SetConsoleMode(hIn, ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
 }
 
-void drawText(HANDLE& hOut, short posY, int windowCols, char* text, int color)
+void drawText(HANDLE hOut, short posY, int windowCols, char* text, int color)
 {
     SetConsoleTextAttribute(hOut, color);
     SetConsoleCursorPosition(hOut, { static_cast<short>((windowCols - getLettersInWord(text)) / 2),

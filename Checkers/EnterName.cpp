@@ -11,7 +11,14 @@
 
 #define WORD_POS_Y 3
 
-void drawKeyboard(HANDLE& hOut)
+void enterPlayersName(HANDLE hOut, HANDLE hIn, char* playerName1, char* playerName2,
+    int buffSize, int* result);
+void enterPlayerName(HANDLE hOut, HANDLE hIn, char* playerName, int buffSize, int* result);
+void drawKeyboard(HANDLE hOut);
+void drawButtons(HANDLE hOut, COORD back, COORD next);
+void drawName(HANDLE hOut, char* text, short posY);
+
+void drawKeyboard(HANDLE hOut)
 {
     SetConsoleTextAttribute(hOut, Colors::COLOR_WHITE);
     SetConsoleCursorPosition(hOut, { KEYBOARD_NUMBER_POS_X, KEYBOARD_NUMBER_POS_Y });
@@ -32,7 +39,7 @@ void drawKeyboard(HANDLE& hOut)
     }
 }
 
-void drawButtons(HANDLE& hOut, COORD back, COORD next)
+void drawButtons(HANDLE hOut, COORD back, COORD next)
 {
     SetConsoleTextAttribute(hOut, Colors::COLOR_GRAY);
     SetConsoleCursorPosition(hOut, back);
@@ -41,7 +48,7 @@ void drawButtons(HANDLE& hOut, COORD back, COORD next)
     std::cout << "NEXT";
 }
 
-void drawName(HANDLE& hOut, char* text, short posY)
+void drawName(HANDLE hOut, char* text, short posY)
 {
     SetConsoleTextAttribute(hOut, Colors::COLOR_RED);
     SetConsoleCursorPosition(hOut, { static_cast<short>((WINDOW_COLS - getLettersInWord(text)) / 2),
@@ -49,7 +56,7 @@ void drawName(HANDLE& hOut, char* text, short posY)
     std::cout << text;
 }
 
-void enterPlayerName(HANDLE& hOut, HANDLE& hIn, char* playerName, int buffSize, int* result)
+void enterPlayerName(HANDLE hOut, HANDLE hIn, char* playerName, int buffSize, int* result)
 {
     drawKeyboard(hOut);
     COORD buttonBack = { 3, WINDOW_LINES - 2 };
@@ -154,7 +161,7 @@ void enterPlayerName(HANDLE& hOut, HANDLE& hIn, char* playerName, int buffSize, 
     }
 }
 
-void enterPlayersName(HANDLE& hOut, HANDLE& hIn, char* playerName1, char* playerName2, 
+void enterPlayersName(HANDLE hOut, HANDLE hIn, char* playerName1, char* playerName2, 
     int buffSize, int* result)
 {
     int buff = 0;

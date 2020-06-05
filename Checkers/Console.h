@@ -6,11 +6,11 @@ void cursorVisible(HANDLE hOut, bool isVisible = false);
 void dragWindow(int X, int Y);
 void resizeWindow(int cols, int lines);
 void drawPosition(HANDLE hout, int color, COORD where, COORD what);
-void changeFont(HANDLE& hOut, int fontSize, const wchar_t* fontName);
+void changeFont(HANDLE hOut, int fontSize, const wchar_t* fontName);
 void openUrl(LPCSTR url);
-void cls(HANDLE& hIn);
+void cls(HANDLE hIn);
 
-void drawText(HANDLE& hOut, short posY, int windowCols, char* text, int color);
+void drawText(HANDLE hOut, short posY, int windowCols, char* text, int color);
 int getLettersInWord(char* text);
 
 bool strcatK(char* destination, int buffSize, const char* source);

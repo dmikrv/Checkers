@@ -11,14 +11,14 @@ enum MenuMode {
     MENU_SIDE_SELECTION,
 };
 
-void drawLogo(HANDLE& hOut, COORD logo)
+void drawLogo(HANDLE hOut, COORD logo)
 {
     SetConsoleCursorPosition(hOut, logo);
     SetConsoleTextAttribute(hOut, LOGO_COLOR);
     std::cout << "RUSSIAN CHECKERS";
 }
 
-void drawMenu(HANDLE& hOut, COORD* button, int mode)
+void drawMenu(HANDLE hOut, COORD* button, int mode)
 {
     if (mode == MENU_MAIN) {
         SetConsoleCursorPosition(hOut, { button->X,button->Y });
@@ -44,7 +44,7 @@ void drawMenu(HANDLE& hOut, COORD* button, int mode)
     }
 }
 
-void menu(HANDLE& hOut, HANDLE& hIn, int* gameMode)
+void menu(HANDLE hOut, HANDLE hIn, int* gameMode)
 {
     COORD buttNewgame{ WINDOW_COLS / 2 - 4, 6 };
     COORD buttHomepage{ WINDOW_COLS / 2 - 4, 7 };
@@ -65,7 +65,7 @@ void menu(HANDLE& hOut, HANDLE& hIn, int* gameMode)
     DWORD count;
     COORD mousePoint;
     DWORD cWrittenChars;
-    bool repeatFlag[6]{true};
+    bool repeatFlag[6]{true}; // saves the state of the button; whether the cursor is on it
 
     while (true) {
         ReadConsoleInput(hIn, &allEvents, 1, &count);

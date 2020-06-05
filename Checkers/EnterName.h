@@ -6,8 +6,8 @@
 #include "Sounds.h"
 
 void enterPlayersName(
-	HANDLE& hOut, 
-	HANDLE& hIn, 
+	HANDLE hOut, 
+	HANDLE hIn, 
 	char* playerName1, 
 	char* playerName2, 
 	int buffSize, 

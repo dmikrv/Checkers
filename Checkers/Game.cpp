@@ -71,8 +71,6 @@ void endGame(HANDLE hOut, HANDLE hIn, char* playerName1, char* playerName2, int 
 void game(HANDLE hOut, HANDLE hIn, char* playerName1, char* playerName2, int gameMode, int* result)
 {
     cls(hIn);
-    // experiment
-    //endGame(hOut, hIn, playerName1, playerName2, SIDE_BLACK, result); return;
 
     unsigned char field[FIELD_HEIGHT][FIELD_WIDTH];
     int sideNow = (gameMode == GM_BLACK ? SIDE_BLACK : SIDE_WHITE);

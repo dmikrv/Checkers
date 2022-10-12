@@ -39,11 +39,7 @@ void changeFont(HANDLE hOut, int fontSize, const wchar_t* fontName)
 {
     CONSOLE_FONT_INFOEX cfi;
     cfi.cbSize = sizeof(cfi);
-    //cfi.nFont = 0;
     cfi.dwFontSize.Y = fontSize;    // Height
-    //cfi.dwFontSize.Y = dwFontSize.Y;                  // Height
-    //cfi.FontFamily = FF_DONTCARE;
-    //cfi.FontWeight = FW_NORMAL;
     wcscpy_s(cfi.FaceName, fontName); // Choose your font
     SetCurrentConsoleFontEx(hOut, FALSE, &cfi);
 }

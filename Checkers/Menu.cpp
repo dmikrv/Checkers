@@ -7,15 +7,13 @@ const int NONSELECTED_BUTTON_COLOR = Colors::COLOR_GRAY;
 
 enum MenuMode {
     MENU_MAIN,
-    MENU_GM_SELECTION,
-    MENU_SIDE_SELECTION,
 };
 
 void drawLogo(HANDLE hOut, COORD logo)
 {
     SetConsoleCursorPosition(hOut, logo);
     SetConsoleTextAttribute(hOut, LOGO_COLOR);
-    std::cout << "RUSSIAN CHECKERS";
+    std::cout << "UKRAINIAN CHECKERS";
 }
 
 void drawMenu(HANDLE hOut, COORD* button, int mode)
@@ -30,17 +28,6 @@ void drawMenu(HANDLE hOut, COORD* button, int mode)
         SetConsoleCursorPosition(hOut, *(button + 2));
         SetConsoleTextAttribute(hOut, NONSELECTED_BUTTON_COLOR);
         std::cout << "EXIT";
-    }
-    else if (mode == MENU_GM_SELECTION) {
-        //SetConsoleCursorPosition(hOut, *(button + 3));
-        //SetConsoleTextAttribute(hOut, NONSELECTED_BUTTON_COLOR);
-        //std::cout << "SINGLE PLAYER";
-        SetConsoleCursorPosition(hOut, *(button + 4));
-        SetConsoleTextAttribute(hOut, NONSELECTED_BUTTON_COLOR);
-        std::cout << "TWO PLAYERS";
-        SetConsoleCursorPosition(hOut, *(button + 5));
-        SetConsoleTextAttribute(hOut, NONSELECTED_BUTTON_COLOR);
-        std::cout << "BACK";
     }
 }
 
@@ -84,11 +71,9 @@ void menu(HANDLE hOut, HANDLE hIn, int* gameMode)
                         &cWrittenChars);
                     if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED
                         && allEvents.Event.MouseEvent.dwEventFlags != MOUSE_MOVED) {
-                        mode = MENU_GM_SELECTION;
                         sPressButtonThread();
-                        cls(hIn);
-                        drawLogo(hOut, logo);
-                        drawMenu(hOut, buttons, mode);
+                        *gameMode = GM_TWOPLAYER;
+                        return;
                     }
                 }
                 else {
@@ -135,66 +120,6 @@ void menu(HANDLE hOut, HANDLE hIn, int* gameMode)
                     FillConsoleOutputAttribute(hOut, NONSELECTED_BUTTON_COLOR, 4, buttExit,
                         &cWrittenChars);
                     repeatFlag[2] = true;
-                }
-            }
-            else if (mode == MENU_GM_SELECTION) {
-                // single player
-                //if (mousePoint.Y == buttSinglePlay.Y && mousePoint.X >= buttSinglePlay.X 
-                //&& mousePoint.X < buttSinglePlay.X + 13) {
-                //    FillConsoleOutputAttribute(hOut, (Colors::COLOR_BLUE << 4), 13, buttSinglePlay,
-                //&cWrittenChars);
-                //    if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED
-                //    && allEvents.Event.MouseEvent.dwEventFlags != MOUSE_MOVED) {
-                //        ;
-                //    }
-                //}
-                //else {
-                //    FillConsoleOutputAttribute(hOut, Colors::COLOR_GRAY, 13, buttSinglePlay,
-                //&cWrittenChars);
-                //}
-
-                // two player
-                if (mousePoint.Y == buttTwoPlay.Y && mousePoint.X >= buttTwoPlay.X 
-                    && mousePoint.X < buttTwoPlay.X + 11) {
-                    if (repeatFlag[4])
-                        sSelectButtonThread();
-                    repeatFlag[4] = false;
-                    FillConsoleOutputAttribute(hOut, (SELECTED_BUTTON_COLOR << 4), 11, buttTwoPlay,
-                        &cWrittenChars);
-                    if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED
-                        && allEvents.Event.MouseEvent.dwEventFlags != MOUSE_MOVED) {
-                        sPressButtonThread();
-                        *gameMode = GM_TWOPLAYER;
-                        return;
-                    }
-                }
-                else {
-                    FillConsoleOutputAttribute(hOut, NONSELECTED_BUTTON_COLOR, 11, buttTwoPlay,
-                        &cWrittenChars);
-                    repeatFlag[4] = true;
-                }
-
-                // back
-                if (mousePoint.Y == buttBack.Y && mousePoint.X >= buttBack.X 
-                    && mousePoint.X < buttBack.X + 4) {
-                    if (repeatFlag[5])
-                        sSelectButtonThread();
-                    repeatFlag[5] = false;
-                    FillConsoleOutputAttribute(hOut, (SELECTED_BUTTON_COLOR << 4), 4, buttBack,
-                        &cWrittenChars);
-                    if (allEvents.Event.MouseEvent.dwButtonState == FROM_LEFT_1ST_BUTTON_PRESSED
-                        && allEvents.Event.MouseEvent.dwEventFlags != MOUSE_MOVED) {
-                        mode = MENU_MAIN;
-                        sPressButtonThread();
-                        cls(hIn);
-                        drawLogo(hOut, logo);
-                        drawMenu(hOut, buttons, mode);
-                    }
-                }
-                else {
-                    FillConsoleOutputAttribute(hOut, NONSELECTED_BUTTON_COLOR, 4, buttBack,
-                        &cWrittenChars);
-                    repeatFlag[5] = true;
                 }
             }
         }

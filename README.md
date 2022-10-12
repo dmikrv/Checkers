@@ -2,9 +2,9 @@
 
 # Checkers
 
-![Main menu Screenshot](./data/screenshot-main-menu.png)
-![Enter name Screenshot](./data/screenshot-main-entername.png)
-![Games Screenshot](./data/screenshot-game.png)
+![Main menu Screenshot](./data/screenshot-main-menu.png | width=100)
+![Enter name Screenshot](./data/screenshot-main-entername.png | width=100)
+![Games Screenshot](./data/screenshot-game.png | width=100)
 
-![Games Gif 1](./data/game1.gif)
-![Games Gif 2](./data/game2.gif)
+![Games Gif 1](./data/game1.gif | width=100)
+![Games Gif 2](./data/game2.gif | width=100)

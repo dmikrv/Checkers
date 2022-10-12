@@ -3,13 +3,12 @@
 # Checkers
 
 <p float="left">
-    <img src="./data/screenshot-main-menu.png" width=300>
-    <img src="./data/screenshot-main-entername.png" width=300>
-    <img src="./data/screenshot-game.png" width=300>
+    <img src="./data/screenshot-main-menu.png" width=350>
+    <img src="./data/screenshot-main-entername.png" width=350>
 </p>
 
-<img src="./data/game1.gif" width=400>
-<img src="./data/game2.gif" width=400>
+<img src="./data/game1.gif" width=460>
+<img src="./data/game2.gif" width=460>
 
 <!-- ![Main menu Screenshot](./data/screenshot-main-menu.png)
 ![Enter name Screenshot](./data/screenshot-main-entername.png)
